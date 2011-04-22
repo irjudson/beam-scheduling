@@ -12,13 +12,13 @@ import edu.uci.ics.jung.algorithms.generators.GraphGenerator;
 import edu.uci.ics.jung.graph.Graph;
 
 public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
-    private int mNumVertices;
-    private double mWidth;
-    private double mHeight;
-    private Random mRandom;
-    private Factory<Network<V,E>> networkFactory;
-    private Factory<V> vertexFactory;
-    private Factory<E> edgeFactory;
+    public int numVertices;
+    public double width;
+    public double height;
+    public Random random;
+    public Factory<Network<V,E>> networkFactory;
+    public Factory<V> vertexFactory;
+    public Factory<E> edgeFactory;
 
     /**
      * Creates an instance with the specified factories and specifications.
@@ -35,15 +35,15 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
     	this.networkFactory = networkFactory;
     	this.vertexFactory = vertexFactory;
     	this.edgeFactory = edgeFactory;
-        mNumVertices = numVertices;
-        mWidth = width;
-        mHeight = height;
+        this.numVertices = numVertices;
+        this.width = width;
+        this.height = height;
     }
 
     public Network<V,E> create() {
         Network<V,E> network = null;
         network = this.networkFactory.create();
-        for(int i=0; i<mNumVertices; i++) {
+        for(int i=0; i<numVertices; i++) {
             network.addVertex(vertexFactory.create());
         }
 
@@ -62,12 +62,53 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
         return network;
     }
 
+    public Network<V,E> createCenteredRadialTree() {
+        Network<V,E> network = null;
+        network = this.networkFactory.create();
+
+        // Create the root at the center
+        V root = vertexFactory.create();
+        network.addVertex(root);
+        Vertex center = (Vertex)root;
+        center.type = 0;
+        center.location.setLocation(network.width/2, network.height/2);
+        double max_radius = center.calculateRange(center.sectors);
+
+        System.out.println("Center: " + center.location.getX() + "," + center.location.getY());
+        System.out.println("Maximum Distance: " + max_radius);
+
+        // Create the rest of the nodes
+        for(int i=0; i<numVertices - 1; i++) {
+            V node = vertexFactory.create();
+            Vertex n = (Vertex)node;
+            n.type = 1;
+            double theta = i * 360.0 / (numVertices - 1);
+            double radius = random.nextDouble() * max_radius;
+            n.location.setLocation(center.location.getX() + (radius * Math.cos(theta)), 
+                                   center.location.getY() + (radius * Math.sin(theta)));
+            System.out.println("Node: " + n.id + " (" + n.location.getX() + ","+ n.location.getY() + ")");
+            network.addVertex(node);
+        }
+
+        // wire up the rest of the network
+        for(V vertex: network.getVertices()) {
+            if (vertex != root && network.findEdge(root,vertex) == null) {
+                double dist = Point.roundTwoDecimals(((Vertex)root).location.distance(((Vertex)vertex).location));
+                // Check for connectivity & throughput
+                E edge = edgeFactory.create();
+                ((Edge)edge).length = dist;
+                network.addEdge(edge, root, vertex);
+            }
+        }
+        return network;
+    }
+
     /**
      * Sets the seed for the random number generator.
      * @param seed input to the random number generator.
      */
     public void setSeed(long seed) {
-        mRandom = new Random(seed);
+        random = new Random(seed);
         ((VertexFactory)vertexFactory).setSeed(seed);
     }
 }

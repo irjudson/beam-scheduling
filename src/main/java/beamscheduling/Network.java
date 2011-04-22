@@ -3,10 +3,13 @@ package beamscheduling;
 import java.util.*;
 
 import java.awt.Dimension;
+import java.awt.Paint;
+import java.awt.Color;
 import java.awt.geom.Point2D;
 
 import javax.swing.JFrame;
 
+import org.apache.commons.collections15.Transformer;
 import org.apache.commons.collections15.Factory;
 
 import edu.uci.ics.jung.graph.Graph;
@@ -24,8 +27,8 @@ public class Network<V,E>
     implements Graph<V,E> 
 {
 
-    double width;
-    double height;
+    public double width;
+    public double height;
 
     public Network(double width, double height) {
         this.width = width;
@@ -47,10 +50,25 @@ public class Network<V,E>
     }
    
     void draw(int width, int height, String name) {
+        Transformer<Vertex,Paint> vertexPaint = new Transformer<Vertex,Paint>() {
+            public Paint transform(Vertex v) {
+                if (v.type == 0) {
+                    return Color.RED;
+                } else if (v.type == 1) {
+                    return Color.BLUE;
+                } else if (v.type == 2) {
+                    return Color.GREEN;
+                } else {
+                    return Color.YELLOW;
+                }
+            }
+        };  
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Beam Scheduling");
         JFrame jf = new JFrame(name);
         Dimension layoutSize = new Dimension(width, height);
         Layout layout = new StaticLayout(this, new NetworkTransformer(layoutSize, this.width, this.height), layoutSize);
         VisualizationViewer vv = new VisualizationViewer(layout, layoutSize);
+        vv.getRenderContext().setVertexFillPaintTransformer(vertexPaint);
         vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
         vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
         vv.getRenderer().getVertexLabelRenderer().setPosition(Position.CNTR);

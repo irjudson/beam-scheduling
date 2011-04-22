@@ -14,6 +14,7 @@ public class Vertex {
     // maps int sector -> array of vertices.
     public HashMap sectorMap;
     public int     activeSectors;
+    public int     type;  // 0 - Gateway, 1 - RS, 2 - SS
     public float   inThroughput;
     public float   outThroughput;
     private double gainReceiver = Math.pow(10, 2.0 / 10);       // 2 dB

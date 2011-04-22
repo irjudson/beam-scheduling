@@ -25,6 +25,5 @@ class NetworkTransformer implements Transformer<Vertex, Point2D> {
         double new_x = scale_x * node.location.getX();
         double new_y = scale_y * node.location.getY();
         return new Point2D.Double(new_x, new_y);
-                                  
     }
 }
