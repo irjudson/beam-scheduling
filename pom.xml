@@ -13,6 +13,10 @@
       <id>tanesha</id>
       <url>http://tanesha.net/maven2/</url>
     </repository>
+    <repository>
+      <id>java.net</id>
+      <url>http://download.java.net/maven/2/</url>
+    </repository>
   </repositories>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
