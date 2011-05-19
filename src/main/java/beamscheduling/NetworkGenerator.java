@@ -2,17 +2,15 @@ package beamscheduling;
 
 import java.awt.geom.Point2D;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
+import java.util.*;
 import org.apache.commons.collections15.Factory;
 
 import edu.uci.ics.jung.algorithms.generators.GraphGenerator;
 import edu.uci.ics.jung.graph.Graph;
 
 public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
-    public int numVertices;
+    public int numRelays;
+    public int numSubscribers;
     public double width;
     public double height;
     public Random random;
@@ -25,17 +23,19 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
      * @param networkFactory the factory to use to generate the graph
      * @param vertexFactory the factory to use to create vertices
      * @param edgeFactory the factory to use to create edges
-     * @param numVertices the number of vertices for the generated graph
+     * @param numRelays the number of vertices for the generated graph
      * @param width the width of the area the network covers
      * @param height the height of the are the network covers
      */
     public NetworkGenerator(Factory<Network<V,E>> networkFactory,
-    		Factory<V> vertexFactory, Factory<E> edgeFactory, 
-                int numVertices, double width, double height) {
+                            Factory<V> vertexFactory, Factory<E> edgeFactory, 
+                            int numRelays, int numSubscribers, 
+                            double width, double height) {
     	this.networkFactory = networkFactory;
     	this.vertexFactory = vertexFactory;
     	this.edgeFactory = edgeFactory;
-        this.numVertices = numVertices;
+        this.numRelays = numRelays;
+        this.numSubscribers = numSubscribers;
         this.width = width;
         this.height = height;
     }
@@ -43,7 +43,7 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
     public Network<V,E> create() {
         Network<V,E> network = null;
         network = this.networkFactory.create();
-        for(int i=0; i<numVertices; i++) {
+        for(int i=0; i<numRelays; i++) {
             network.addVertex(vertexFactory.create());
         }
 
@@ -65,11 +65,14 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
     public Network<V,E> createCenteredRadialTree() {
         Network<V,E> network = null;
         network = this.networkFactory.create();
+        network.relays = new HashSet(numRelays);
+        network.subscribers = new HashSet(numSubscribers);
 
         // Create the root at the center
         V root = vertexFactory.create();
         network.addVertex(root);
         Vertex center = (Vertex)root;
+        network.gateway = center;
         center.type = 0;
         center.location.setLocation(network.width/2, network.height/2);
         double max_radius = center.calculateRange(center.sectors);
@@ -78,16 +81,19 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
         System.out.println("Maximum Distance: " + max_radius);
 
         // Create the rest of the nodes
-        for(int i=0; i<numVertices - 1; i++) {
+        network.relayList = new Vertex[numRelays];
+        for(int i=0; i<numRelays; i++) {
             V node = vertexFactory.create();
             Vertex n = (Vertex)node;
             n.type = 1;
-            double theta = i * 360.0 / (numVertices - 1);
+            double theta = i * 360.0 / (numRelays - 1);
             double radius = random.nextDouble() * max_radius;
             n.location.setLocation(center.location.getX() + (radius * Math.cos(theta)), 
                                    center.location.getY() + (radius * Math.sin(theta)));
             System.out.println("Node: " + n.id + " (" + n.location.getX() + ","+ n.location.getY() + ")");
             network.addVertex(node);
+            network.relays.add(n);
+            network.relayList[i] = n;
         }
 
         // wire up the rest of the network
@@ -96,9 +102,21 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
                 double dist = Point.roundTwoDecimals(((Vertex)root).location.distance(((Vertex)vertex).location));
                 // Check for connectivity & throughput
                 E edge = edgeFactory.create();
+                ((Edge)edge).type = 0;
                 ((Edge)edge).length = dist;
                 network.addEdge(edge, root, vertex);
             }
+        }
+
+        network.subList = new Vertex[numSubscribers];
+        for(int i = 0; i < numSubscribers; i++) {
+            V node = vertexFactory.create();
+            Vertex v = (Vertex)node;
+            v.type = 2;
+            // Mark this vertex as a client.
+            network.addVertex(node);
+            network.subscribers.add(v);
+            network.subList[i] = v;
         }
         return network;
     }

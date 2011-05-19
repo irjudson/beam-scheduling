@@ -7,12 +7,14 @@ import java.util.Vector;
 import java.util.Collection;
 import edu.uci.ics.jung.graph.Graph;
 
-public class Vertex {
+public class Vertex implements Comparable {
+    public enum Type { GATEWAY, RELAYSTATION, SUBSCRIBERSTATION };
     public int     id;
     public int     sectors;
     public Point2D location;        
     // maps int sector -> array of vertices.
     public HashMap sectorMap;
+    public HashSet beamSet;
     public int     activeSectors;
     public int     type;  // 0 - Gateway, 1 - RS, 2 - SS
     public float   inThroughput;
@@ -21,6 +23,13 @@ public class Vertex {
     private double frequency = 5.8 * Math.pow(10, 9);           // 5.8 Ghz
     private double c = 3.0 * Math.pow(10, 8);                   // Speed of light
     private double lambda = c / frequency;
+
+    public int compareTo(Object otherVertex) throws ClassCastException {
+        if(!(otherVertex instanceof Vertex))
+            throw new ClassCastException("A Vertex object is expected.");
+        int otherId = ((Vertex)otherVertex).id;
+        return this.id - otherId;
+    }
 
     /**
      * @param id the id of the vertex
@@ -46,11 +55,19 @@ public class Vertex {
         return Integer.toString(id);
     }
 
+    /** 
+     * Given this vertex and a degree d, we try to find out if any other vertices are visible.
+     * @param degree is the degree to check
+     * @param theta is the width of the beam
+     * @return a vertex set that is visible.
+     **/
+    //    public Vertex[] searchBeam(int degree, int theta) {
+    //    }
+
     /**
      * Given this vertex and another vertex p, we try to figure out which beam
      * should we use for the vertex p.
-     * @param sectors is the number of sectors used (e.g. 4) in this antenna
-     * @param p is another vertex
+     * @param v is another vertex
      * @return the beam index in which vertex p lies for this vertex
      */
     public int findSector(Vertex v){
@@ -186,4 +203,53 @@ public class Vertex {
 
        return weight;
    }
+
+   /**
+     *
+     * @param covered is the width of the beam
+     * @param distance is the distance b/n transmitter and receiver
+     * @return the user throughput
+     */
+   public double calculateThroughput(int covered, Vertex v){
+       double distance = location.distance(v.location);
+       double gainTransmitter = Math.pow(10, (2 + 10 * Math.log10(360.0 / covered)) / 10.0);
+       double pathLoss = gainReceiver * gainTransmitter * Math.pow(lambda, 2);
+       pathLoss /= Math.pow(4 * Math.PI * distance, 2);
+       // in dB
+       pathLoss = 10 * Math.log10(pathLoss);
+       // take absolute value
+       pathLoss = Math.abs(pathLoss);
+
+       double weight = 0;
+       if(pathLoss > 126)
+           weight = 0;                     // 0 Mb/s
+       else if (pathLoss > 121.5)
+           weight = 10 * Math.pow(10, 6);  // 10 Mb/s
+       else if (pathLoss > 118.75)
+           weight = 20 * Math.pow(10, 6);  // 20 Mb/s
+       else if (pathLoss > 114.5)
+           weight = 30 * Math.pow(10, 6);  // 30 Mb/s
+       else if (pathLoss > 113)
+           weight = 40 * Math.pow(10, 6);  // 40 Mb/s
+       else
+           weight = 45 * Math.pow(10, 6);  // 45 Mb/s
+
+       return weight;
+   }
+
+    public double getBearing(Vertex other) {
+        double x1 = this.location.getX();
+        double y1 = this.location.getY();
+        double x2 = other.location.getX();
+        double y2 = other.location.getY();
+        double length = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) *
+(y2 - y1));
+        double angleRadians = Math.acos((y2 - y1) / length); // in radians
+        double angleDegrees = Math.toDegrees(angleRadians);
+
+        if (x2 > x1) {
+            return angleDegrees;
+        }
+        return (360.0 - angleDegrees);
+    }
 }

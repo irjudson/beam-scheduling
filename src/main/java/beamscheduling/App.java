@@ -40,22 +40,11 @@ public class App {
 
         // Handle options that matter
         System.out.println("Random Seed: " + options.seed);
-        networkGenerator = Network.getGenerator(options.nodes, options.sectors, options.width, options.height, options.seed);
+        networkGenerator = Network.getGenerator(options.nodes, options.clients, options.sectors, 
+                                                options.width, options.height, options.seed);
         network = networkGenerator.createCenteredRadialTree();
 
-        for(Vertex v: (Collection<Vertex>)network.getVertices()) {
-            v.computeConnectivity(network);
-        }
-
-        for(int i = 0; i < options.clients; i++) {
-            Vertex v = (Vertex)networkGenerator.vertexFactory.create();
-            v.type = 2;
-            // Mark this vertex as a client.
-            network.addVertex(v);
-        }
-
         System.out.println(network);
-
         network.draw(800, 600, "Beam Scheduling Application");
 
         Greedy greedy = new Greedy(network);

@@ -5,16 +5,16 @@ public class Edge {
         this.id = id;
     }
         
+    public Edge() {
+        this.id = -1;
+    }
+
     public int     id;                          
     public double  length;
     public double  capacity;
+    public int     type;
 
     public String toString() {
-        //        StringBuilder result = new StringBuilder();
-        //        result.append("Vertex: " + id);
-        //        result.append(" X: " + location.getX());
-        //        result.append(" Y: " + location.getY());
-        //        return result.toString();
         return Double.toString(length);
     }
 }
