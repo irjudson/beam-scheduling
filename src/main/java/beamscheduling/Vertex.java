@@ -19,6 +19,8 @@ public class Vertex implements Comparable {
     public int     type;  // 0 - Gateway, 1 - RS, 2 - SS
     public float   inThroughput;
     public float   outThroughput;
+    public Vertex  preferredRelay;
+    public double  bestBearing;
     private double gainReceiver = Math.pow(10, 2.0 / 10);       // 2 dB
     private double frequency = 5.8 * Math.pow(10, 9);           // 5.8 Ghz
     private double c = 3.0 * Math.pow(10, 8);                   // Speed of light
@@ -54,15 +56,6 @@ public class Vertex implements Comparable {
     public String toString() {
         return Integer.toString(id);
     }
-
-    /** 
-     * Given this vertex and a degree d, we try to find out if any other vertices are visible.
-     * @param degree is the degree to check
-     * @param theta is the width of the beam
-     * @return a vertex set that is visible.
-     **/
-    //    public Vertex[] searchBeam(int degree, int theta) {
-    //    }
 
     /**
      * Given this vertex and another vertex p, we try to figure out which beam
@@ -242,8 +235,7 @@ public class Vertex implements Comparable {
         double y1 = this.location.getY();
         double x2 = other.location.getX();
         double y2 = other.location.getY();
-        double length = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) *
-(y2 - y1));
+        double length = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
         double angleRadians = Math.acos((y2 - y1) / length); // in radians
         double angleDegrees = Math.toDegrees(angleRadians);
 
@@ -251,5 +243,16 @@ public class Vertex implements Comparable {
             return angleDegrees;
         }
         return (360.0 - angleDegrees);
+    }
+    
+    public boolean containsInBeam(Vertex node, int theta) {
+        double rBearing = this.getBearing(node);
+        double lowerBound = rBearing - (theta/2);
+        double upperBound = rBearing + (theta/2);
+        // Check if node is within the beam
+        if(rBearing >= lowerBound && rBearing <= upperBound) {
+            return true;
+        }
+        return false;
     }
 }

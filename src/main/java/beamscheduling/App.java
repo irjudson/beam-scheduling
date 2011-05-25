@@ -45,13 +45,15 @@ public class App {
         network = networkGenerator.createCenteredRadialTree();
 
         System.out.println(network);
-        network.draw(800, 600, "Beam Scheduling Application");
+        network.draw(1024, 768, "Beam Scheduling Application");
 
+        int step = 1;
+        int theta = 20;
         Greedy greedy = new Greedy(network);
-        greedy.solve();
+        greedy.solve(step, theta);
 
         LPRound lpround = new LPRound(network);
-        lpround.solve();
+        lpround.solve(step, theta);
 
     }
 }

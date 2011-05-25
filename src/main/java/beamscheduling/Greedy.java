@@ -11,11 +11,12 @@ class Greedy {
         this.network = network;
     }
 
-    public void solve() {
+    public void solve(int step, int theta) {
         HashMap firstLoop = new HashMap();
         int numVertices = network.getVertexCount();
 
         // Loop 1: Find the closest relay
+        // Mark each subscriber with their preferred relay
         for(int i = 0; i < network.subList.length; i++) {
             Vertex s = network.subList[i];
             double minDist = 1000000.0;
@@ -28,6 +29,7 @@ class Greedy {
                     minDist = dist;
                     maxThroughput = s.calculateThroughput(20, r);
                     bestRelay = r;
+                    s.preferredRelay = r;
                 }
             }
             // Do something with the relay
@@ -39,14 +41,17 @@ class Greedy {
         }
 
         // Loop 2: Calculate the greedy reward
-        network.calculateBeamSet(1, 20);
+        network.calculateBeamSet(step, theta);
 
         // Loop 3: Find a better Relay if there is one
+        // and it's beam is covering this node
         for(int i = 0; i < network.subList.length; i++) {
             Vertex s = network.subList[i];
             double maxThroughput = 0.0;
             Vertex bestRelay = null;
             for(int j = 0; j < network.relayList.length; j++) {
+                // Check to see if the beam intersects this subscriber
+                // Otherwise none of this matters.
                 Vertex r = network.relayList[j];
                 double throughput = s.calculateThroughput(20, r);
                 if (throughput > maxThroughput) {
@@ -55,11 +60,13 @@ class Greedy {
                 }
             }
             // Do something with the relay
-            Edge e = new Edge();
-            e.type = 3;
-            e.length = Point.roundTwoDecimals(s.location.distance(bestRelay.location));
-            network.addEdge(e, s, bestRelay);
-            firstLoop.put(s, bestRelay);
+            if (bestRelay.containsInBeam(s, theta)) {
+                Edge e = new Edge();
+                e.type = 3;
+                e.length = Point.roundTwoDecimals(s.location.distance(bestRelay.location));
+                network.addEdge(e, s, bestRelay);
+                firstLoop.put(s, bestRelay);
+            }
         }
 
         System.out.println("Solved the greedy problem.");

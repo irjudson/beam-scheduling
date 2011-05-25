@@ -10,7 +10,7 @@ class LPRound {
         this.network = network;
     }
 
-    public void solve() {
+    public void solve(int step, int theta) {
         System.out.println("Solved the lpround problem.");
     }
 }

@@ -7,6 +7,9 @@ import java.awt.Paint;
 import java.awt.Stroke;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Graphics;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 import javax.swing.JFrame;
@@ -21,6 +24,7 @@ import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.algorithms.layout.StaticLayout;
 
 import edu.uci.ics.jung.visualization.VisualizationViewer;
+import edu.uci.ics.jung.visualization.VisualizationServer.Paintable;
 import edu.uci.ics.jung.visualization.decorators.*;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 
@@ -63,13 +67,13 @@ public class Network<V,E>
                     return new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
                 } else if (e.type == 1) {
                     float dash[] = {5.0f};
-                    return new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
+                    return new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
                 } else if (e.type == 2) {
                     float dash[] = {10.0f};
-                    return new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
+                    return new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
                 } else if (e.type == 3) {
                     float dash[] = {15.0f};
-                    return new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
+                    return new BasicStroke(4.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
                 } else {
                     float dash[] = {20.0f};
                     return new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
@@ -82,7 +86,7 @@ public class Network<V,E>
                 if (v.type == 0) {
                     return Color.RED;
                 } else if (v.type == 1) {
-                    return Color.BLUE;
+                    return Color.CYAN;
                 } else if (v.type == 2) {
                     return Color.GREEN;
                 } else {
@@ -101,6 +105,9 @@ public class Network<V,E>
         vv.getRenderContext().setEdgeStrokeTransformer(edgeDraw);
         vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
         vv.getRenderer().getVertexLabelRenderer().setPosition(Position.CNTR);
+        Paintable showBeam = new ShowBeam(vv, this);
+        vv.addPostRenderPaintable(showBeam);
+
         jf.getContentPane().add(vv);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.pack();
@@ -131,6 +138,7 @@ public class Network<V,E>
             }
             beamSet.put(relay, subscribers);
         }
+
         // Now we can calcuate beamsets sanely
         // Looping through beamSet which is organized like:
         // beamSet[relay] => subscribers[bearing] => [throughput, ss]
@@ -171,6 +179,7 @@ public class Network<V,E>
                         // There's nothing to try to remove
                     }
                 }
+
                 if (beamContains.keySet().size() > 0 ) {
                     // Print the beam set for this degree position
                     Iterator bci = beamContains.keySet().iterator();
@@ -179,17 +188,24 @@ public class Network<V,E>
                     while(bci.hasNext()) {
                         double bearing = Double.valueOf(bci.next().toString()).doubleValue();
                         ArrayList entry = (ArrayList)beamContains.get(bearing);
-                        throughput += Double.valueOf(entry.get(0).toString()).doubleValue();
-                        subs.add(entry.get(1));
+                        Vertex sub = (Vertex)entry.get(1);
+                        // Ensure we're only calculating for preferred relays
+                        if (sub.preferredRelay == relay) {
+                            throughput += Double.valueOf(entry.get(0).toString()).doubleValue();
+                            subs.add(sub);
+                        }
                     }
                     if(throughput >= bestThroughput) {
                         bestThroughput = throughput;
                         bestBearing = i;
+                        relay.bestBearing = i;
                         bestSet = subs;
                     }
                 }
             }
+
             System.out.println("Relay: " + relay + " Bearing: " + bestBearing + " Throughput: " + bestThroughput);
+
             Iterator sitr = bestSet.iterator();
             while(sitr.hasNext()) {
                 Vertex sub = (Vertex)sitr.next();
@@ -198,6 +214,35 @@ public class Network<V,E>
                 e.length = Point.roundTwoDecimals(sub.location.distance(relay.location));
                 this.addEdge(((E)e), ((V)sub), ((V)relay));
             }
+        }
+    }
+
+    static class ShowBeam implements Paintable {
+        VisualizationViewer vv;
+        Network network;
+
+        public ShowBeam(VisualizationViewer v, Network network) {
+            this.vv = v;
+            this.network = network;
+        }
+
+        public void paint(Graphics g) {
+            Graphics2D g2 = (Graphics2D)g;
+            // Draw the beams
+            Iterator itr = this.network.relays.iterator();
+            while(itr.hasNext()) {
+                Vertex relay = (Vertex)itr.next();
+                float old_x = (float)relay.location.getX();
+                float old_y = (float)relay.location.getY();
+                float new_x = old_x + ((float)(500.0 * Math.sin(relay.bestBearing)));
+                float new_y = old_y + ((float)(500.0 * Math.cos(relay.bestBearing)));
+                g2.setColor(Color.black);
+                g2.draw(new Line2D.Float(old_x, old_y, new_x, new_y));
+                System.out.println("Drawing beam for relay: " + relay + "[ " + old_x + "," + old_y + " " + new_x + "," + new_y+"]");
+            }
+        }
+        public boolean useTransform() {
+            return true;
         }
     }
 }
