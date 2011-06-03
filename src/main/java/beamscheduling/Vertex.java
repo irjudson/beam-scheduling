@@ -3,7 +3,7 @@ package beamscheduling;
 import java.awt.geom.Point2D;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Vector;
+import java.util.TreeSet;
 import java.util.Collection;
 import edu.uci.ics.jung.graph.Graph;
 
@@ -250,7 +250,7 @@ public class Vertex implements Comparable {
         double lowerBound = rBearing - (theta/2);
         double upperBound = rBearing + (theta/2);
         // Check if node is within the beam
-        if(rBearing >= lowerBound && rBearing <= upperBound) {
+        if(this.bestBearing >= lowerBound && this.bestBearing <= upperBound) {
             return true;
         }
         return false;

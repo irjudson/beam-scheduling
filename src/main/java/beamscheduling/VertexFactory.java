@@ -25,7 +25,7 @@ class VertexFactory implements Factory<Vertex> {
     }
 
     public Vertex create(Vertex root, double max_r) {
-        double theta = generator.nextDouble() * 360.0;
+        double theta = ((generator.nextDouble() * 360.0) * Math.PI) / 180.0;
         double radius = generator.nextDouble() * max_r;
         double x = root.location.getX() + (radius * Math.cos(theta));
         double y = root.location.getY() + (radius * Math.sin(theta));

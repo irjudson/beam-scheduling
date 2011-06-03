@@ -86,7 +86,7 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             V node = vertexFactory.create();
             Vertex n = (Vertex)node;
             n.type = 1;
-            double theta = i * 360.0 / (numRelays - 1);
+            double theta = (i * 360.0 / (numRelays - 1) * Math.PI ) / 180.0;
             double radius = random.nextDouble() * max_radius;
             n.location.setLocation(center.location.getX() + (radius * Math.cos(theta)), 
                                    center.location.getY() + (radius * Math.sin(theta)));
