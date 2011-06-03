@@ -21,6 +21,7 @@ public class Vertex implements Comparable {
     public float   outThroughput;
     public Vertex  preferredRelay;
     public double  bestBearing;
+    public int     bestK, bestL; // Brendan added
     private double gainReceiver = Math.pow(10, 2.0 / 10);       // 2 dB
     private double frequency = 5.8 * Math.pow(10, 9);           // 5.8 Ghz
     private double c = 3.0 * Math.pow(10, 8);                   // Speed of light

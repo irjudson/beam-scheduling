@@ -47,13 +47,14 @@ public class App {
         System.out.println(network);
         network.draw(1024, 768, "Beam Scheduling Application");
 
+        network.calculateBeamSets();
         int step = 1;
         int theta = 20;
         Greedy greedy = new Greedy(network);
-        greedy.solve(step, theta);
+        greedy.solve();
 
         LPRound lpround = new LPRound(network);
-        lpround.solve(step, theta);
+        lpround.solve();
 
     }
 }

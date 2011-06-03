@@ -8,19 +8,19 @@ public class CmdLineOptions {
     // Execution stuff
   @Option(name = "-w", aliases = {"--width"}, metaVar = "WIDTH",
           usage = "Width of the simulation bounding box.")
-    public double width = 30000.0;
+    public double width = 90000.0;
 
   @Option(name = "-h", aliases = {"--height"}, metaVar = "HEIGHT",
           usage = "Height of the simulation bounding box.")
-    public double height = 30000.0;
+    public double height = 90000.0;
 
   @Option(name = "-n", aliases = {"--nodes"}, metaVar = "NODES",
           usage = "Number of nodes in the base network.")
-    public int nodes = 10;
+    public int nodes = 5;
 
   @Option(name = "-c", aliases = {"--clients"}, metaVar = "CLIENTS",
           usage = "Number of clients using the network.")
-    public int clients = 10;
+    public int clients = 15;
 
   @Option(name = "-m", aliases = {"--sectors"}, metaVar = "SECTORS",
           usage = "Number of sectors per antenna / node.")
