@@ -187,36 +187,48 @@ public class Network<V, E>
     public void calculateBeamSets() {
         int numRelays = relayList.length;
         int numSubs = subList.length;
-        this.beamSet = new HashSet[numRelays][this.thetaSet.length][numSubs];
+        this.beamSet = new HashSet[numRelays][this.thetaSet.length][];
 
         for (int i = 0; i < relayList.length; i++) {
             Vertex relay = relayList[i];
-            BearingSub[] sortedSubs = new BearingSub[numSubs];
-            for (int j = 0; j < subList.length; j++) {
-                Vertex sub = subList[j];
-                double bearing = relay.getBearing(sub);
-                sortedSubs[j] = new BearingSub(bearing, sub);
-            }
-            Arrays.sort(sortedSubs);
 
             for (int k = 0; k < this.thetaSet.length; k++) {
+                BearingSub[] sortedSubs = new BearingSub[numSubs];
+                int ns = 0;
+                for (int j = 0; j < subList.length; j++) {
+                    Vertex sub = subList[j];
+                    double bearing = relay.getBearing(sub);
+                    if (relay.calculateThroughput(this.thetaSet[k], sub) > 0) {
+                        sortedSubs[ns++] = new BearingSub(bearing, sub);
+                    }
+                }
+                sortedSubs = Arrays.copyOf(sortedSubs, ns);
+                Arrays.sort(sortedSubs);
+
+
+                this.beamSet[i][k] = new HashSet[0];
+                ArrayList<HashSet<Vertex>> tmp = new ArrayList();
                 for (int start = 0; start < sortedSubs.length; start++) {
-                    this.beamSet[i][k][start] = new HashSet<Vertex>();
+                    HashSet<Vertex> nextSet = new HashSet<Vertex>();
                     int end = start;
                     double endBearing = sortedSubs[end].bearing;
                     if (endBearing < sortedSubs[start].bearing) {
                         endBearing += 360.0;
                     }
                     while (endBearing - sortedSubs[start].bearing <= this.thetaSet[k]) {
-                        this.beamSet[i][k][start].add(sortedSubs[end].sub);
+                        nextSet.add(sortedSubs[end].sub);
                         end = (end + 1) % sortedSubs.length;
                         endBearing = sortedSubs[end].bearing;
                         if (endBearing < sortedSubs[start].bearing) {
                             endBearing += 360.0;
                         }
                     }
-                    //System.out.println("beamSet[" + i + "][" + k + "][" + start + "] = " + this.beamSet[i][k][start]);
+                    if (tmp.isEmpty() || !tmp.get(tmp.size() - 1).containsAll(nextSet)) {
+                        tmp.add(nextSet);
+                        System.out.println("beamSet[" + i + "][" + k + "] adding " + nextSet);
+                    }
                 }
+                this.beamSet[i][k] = tmp.toArray(this.beamSet[i][k]);
             }
         }
     }

@@ -20,25 +20,23 @@ class Greedy {
         // Mark each subscriber with their preferred relay
         for (int i = 0; i < network.subList.length; i++) {
             Vertex s = network.subList[i];
-            double minDist = 1000000.0;
-            double maxThroughput = 0.0;
-            Vertex bestRelay = null;
+            double minDist = Double.MAX_VALUE;
             for (int j = 0; j < network.relayList.length; j++) {
                 Vertex r = network.relayList[j];
                 double dist = s.location.distance(r.location);
+                //System.out.println("distance from " + s + " to " + r + " = " + dist);
                 if (dist < minDist) {
                     minDist = dist;
-                    maxThroughput = s.calculateThroughput(20, r);
-                    bestRelay = r;
                     s.preferredRelay = r;
                 }
             }
+            System.out.println("preferred relay for " + s + " = " + s.preferredRelay);
             // Do something with the relay
-            Edge e = new Edge();
-            e.type = 1;
-            e.length = Point.roundTwoDecimals(s.location.distance(bestRelay.location));
-            network.addEdge(e, s, bestRelay);
-            firstLoop.put(s, bestRelay);
+//            Edge e = new Edge();
+//            e.type = 1;
+//            e.length = Point.roundTwoDecimals(s.location.distance(bestRelay.location));
+//            network.addEdge(e, s, bestRelay);
+//            firstLoop.put(s, bestRelay);
         }
 
         // Loop 2: Choose the beam sets for each relay
@@ -64,7 +62,7 @@ class Greedy {
                 }
             }
             System.out.println("relay " + r + ": best theta " + network.thetaSet[r.bestK] + " best l " + r.bestL);
-            
+
             // center beams:
             HashSet<Vertex> bestBeamSet = network.beamSet[i][r.bestK][r.bestL];
             double min = 360.0;
@@ -78,8 +76,9 @@ class Greedy {
             } else {
                 min += 360.0;
                 double b = (max + min) / 2.0;
-                if (b > 360.0)
+                if (b > 360.0) {
                     b -= 360.0;
+                }
                 r.bestBearing = b;
             }
         }
@@ -88,31 +87,55 @@ class Greedy {
         // Loop 3: Find a better Relay if there is one
         // and it's beam is covering this node
         double overallThroughput = 0.0;
-        
+
         for (int i = 0; i < network.subList.length; i++) {
             Vertex s = network.subList[i];
             double maxThroughput = 0.0;
-            Vertex bestRelay = null;
+            s.preferredRelay = null;
             for (int j = 0; j < network.relayList.length; j++) {
                 // Check to see if the beam intersects this subscriber
                 // Otherwise none of this matters.
                 Vertex r = network.relayList[j];
-                HashSet<Vertex> bestBeamSet = network.beamSet[j][r.bestK][r.bestL];                
+                HashSet<Vertex> bestBeamSet = network.beamSet[j][r.bestK][r.bestL];
                 double throughput = r.calculateThroughput(network.thetaSet[r.bestK], s);
                 if (bestBeamSet.contains(s) && throughput > maxThroughput) {
                     maxThroughput = throughput;
-                    bestRelay = r;
+                    s.preferredRelay = r;
                 }
             }
             overallThroughput += maxThroughput;
-//            // Do something with the relay
-//            if (bestRelay != null) {
-//                Edge e = new Edge();
-//                e.type = 3;
-//                e.length = Point.roundTwoDecimals(s.location.distance(bestRelay.location));
-//                network.addEdge(e, s, bestRelay);
-//                firstLoop.put(s, bestRelay);
-//            }
+            // Do something with the relay
+            if (s.preferredRelay != null) {
+                Edge e = new Edge();
+                e.type = 1;
+                e.length = Point.roundTwoDecimals(s.preferredRelay.calculateThroughput(network.thetaSet[s.preferredRelay.bestK], s));
+                network.addEdge(e, s, s.preferredRelay);
+                firstLoop.put(s, s.preferredRelay);
+            }
+        }
+
+        // center beams:
+        for (int i = 0; i < network.relayList.length; i++) {
+            Vertex r = network.relayList[i];
+            double min = 360.0;
+            double max = 0.0;
+            for (int j = 0; j < network.subList.length; j++) {
+                Vertex s = network.subList[j];
+                if (s.preferredRelay == r) {
+                    min = Math.min(min, r.getBearing(s));
+                    max = Math.max(max, r.getBearing(s));
+                }
+            }
+            if (max - min <= network.thetaSet[r.bestK]) {
+                r.bestBearing = (max + min) / 2.0;
+            } else {
+                min += 360.0;
+                double b = (max + min) / 2.0;
+                if (b > 360.0) {
+                    b -= 360.0;
+                }
+                r.bestBearing = b;
+            }
         }
 
         System.out.println("Solved the greedy problem, overall throughput = " + overallThroughput);

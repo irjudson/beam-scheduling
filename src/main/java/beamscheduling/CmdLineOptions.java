@@ -8,11 +8,11 @@ public class CmdLineOptions {
     // Execution stuff
   @Option(name = "-w", aliases = {"--width"}, metaVar = "WIDTH",
           usage = "Width of the simulation bounding box.")
-    public double width = 90000.0;
+    public double width = 30000.0;
 
   @Option(name = "-h", aliases = {"--height"}, metaVar = "HEIGHT",
           usage = "Height of the simulation bounding box.")
-    public double height = 90000.0;
+    public double height = 30000.0;
 
   @Option(name = "-n", aliases = {"--nodes"}, metaVar = "NODES",
           usage = "Number of nodes in the base network.")
@@ -29,6 +29,7 @@ public class CmdLineOptions {
   @Option(name = "-s", aliases = {"--seed"}, metaVar = "SEED",
           usage = "Specify the random seed, defaults to a random seed.")
     public long seed = System.nanoTime();
+    //public long seed = (long) (new Long("1307379278874304000")).longValue(); 
 
   @Option(name = "-l", aliases = {"--theta"}, metaVar = "THETA",
           usage = "Specify beam width in degrees for theta.")
