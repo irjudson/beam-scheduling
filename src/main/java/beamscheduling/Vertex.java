@@ -22,6 +22,7 @@ public class Vertex implements Comparable {
     public Vertex  preferredRelay;
     public double  bestBearing;
     public int     bestK, bestL; // Brendan added
+    public double  queueLength;
     private double gainReceiver = Math.pow(10, 2.0 / 10);       // 2 dB
     private double frequency = 5.8 * Math.pow(10, 9);           // 5.8 Ghz
     private double c = 3.0 * Math.pow(10, 8);                   // Speed of light
@@ -41,10 +42,11 @@ public class Vertex implements Comparable {
      * @param y the y location of this vertex
      * @return Vertex a new vertex.
      **/
-    public Vertex(int id, int sectors, double x, double y){
+    public Vertex(int id, int sectors, double x, double y, double queueLength){
         this.id = id;
         this.sectors = sectors;
         this.sectorMap = new HashMap(sectors);
+        this.queueLength = queueLength;
         for(int i=0; i<sectors; i++) {
             this.sectorMap.put(i, new HashSet<Vertex>());
         }

@@ -77,8 +77,8 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
         center.location.setLocation(network.width/2, network.height/2);
         double max_radius = center.calculateRange(center.sectors);
 
-        System.out.println("Center: " + center.location.getX() + "," + center.location.getY());
-        System.out.println("Maximum Distance: " + max_radius);
+        //System.out.println("Center: " + center.location.getX() + "," + center.location.getY());
+        //System.out.println("Maximum Distance: " + max_radius);
 
         // Create the rest of the nodes
         network.relayList = new Vertex[numRelays];
@@ -90,7 +90,7 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             double radius = random.nextDouble() * max_radius;
             n.location.setLocation(center.location.getX() + (radius * Math.cos(theta)), 
                                    center.location.getY() + (radius * Math.sin(theta)));
-            System.out.println("Node: " + n.id + " (" + n.location.getX() + ","+ n.location.getY() + ")");
+            //System.out.println("Node: " + n.id + " (" + n.location.getX() + ","+ n.location.getY() + ")");
             network.addVertex(node);
             network.relays.add(n);
             network.relayList[i] = n;

@@ -12,7 +12,7 @@ class Greedy {
         this.network = network;
     }
 
-    public void solve() {
+    public double solve() {
         HashMap firstLoop = new HashMap();
         int numVertices = network.getVertexCount();
 
@@ -30,7 +30,7 @@ class Greedy {
                     s.preferredRelay = r;
                 }
             }
-            System.out.println("preferred relay for " + s + " = " + s.preferredRelay);
+            //System.out.println("preferred relay for " + s + " = " + s.preferredRelay);
             // Do something with the relay
 //            Edge e = new Edge();
 //            e.type = 1;
@@ -42,18 +42,18 @@ class Greedy {
         // Loop 2: Choose the beam sets for each relay
         for (int i = 0; i < network.relayList.length; i++) {
             Vertex r = network.relayList[i];
-            for (int k = 0; k < network.thetaSet.length; k++) {
-                int theta = network.thetaSet[k];
+            for (int k = 0; k < Network.thetaSet.length; k++) {
+                int theta = Network.thetaSet[k];
                 double bestReward = 0.0;
                 for (int l = 0; l < network.beamSet[i][k].length; l++) {
                     double reward = 0.0;
                     HashSet<Vertex> beamSet = network.beamSet[i][k][l];
                     for (Vertex v : beamSet) {
                         if (v.preferredRelay == r) {
-                            reward += r.calculateThroughput(theta, v);
+                            reward += v.queueLength * Math.min(v.queueLength, r.calculateThroughput(theta, v) * network.timeslotLength);
                         }
                     }
-                    System.out.println("r: " + r + " k: " + k + " l: " + l + "  reward = " + reward);
+                    //System.out.println("r: " + r + " k: " + k + " l: " + l + "  reward = " + reward);
                     if (reward >= bestReward) {
                         bestReward = reward;
                         r.bestK = k;
@@ -61,32 +61,14 @@ class Greedy {
                     }
                 }
             }
-            System.out.println("relay " + r + ": best theta " + network.thetaSet[r.bestK] + " best l " + r.bestL);
+            //System.out.println("relay " + r + ": best theta " + network.thetaSet[r.bestK] + " best l " + r.bestL);
 
-            // center beams:
-            HashSet<Vertex> bestBeamSet = network.beamSet[i][r.bestK][r.bestL];
-            double min = 360.0;
-            double max = 0.0;
-            for (Vertex v : bestBeamSet) {
-                min = Math.min(min, r.getBearing(v));
-                max = Math.max(max, r.getBearing(v));
-            }
-            if (max - min <= network.thetaSet[r.bestK]) {
-                r.bestBearing = (max + min) / 2.0;
-            } else {
-                min += 360.0;
-                double b = (max + min) / 2.0;
-                if (b > 360.0) {
-                    b -= 360.0;
-                }
-                r.bestBearing = b;
-            }
         }
 
 
         // Loop 3: Find a better Relay if there is one
         // and it's beam is covering this node
-        double overallThroughput = 0.0;
+        double objectiveVal = 0.0;
 
         for (int i = 0; i < network.subList.length; i++) {
             Vertex s = network.subList[i];
@@ -97,13 +79,13 @@ class Greedy {
                 // Otherwise none of this matters.
                 Vertex r = network.relayList[j];
                 HashSet<Vertex> bestBeamSet = network.beamSet[j][r.bestK][r.bestL];
-                double throughput = r.calculateThroughput(network.thetaSet[r.bestK], s);
+                double throughput = r.calculateThroughput(network.thetaSet[r.bestK], s) * network.timeslotLength;
                 if (bestBeamSet.contains(s) && throughput > maxThroughput) {
                     maxThroughput = throughput;
                     s.preferredRelay = r;
                 }
             }
-            overallThroughput += maxThroughput;
+            objectiveVal += s.queueLength * Math.min(s.queueLength, maxThroughput);
             // Do something with the relay
             if (s.preferredRelay != null) {
                 Edge e = new Edge();
@@ -138,6 +120,7 @@ class Greedy {
             }
         }
 
-        System.out.println("Solved the greedy problem, overall throughput = " + overallThroughput);
+        //System.out.println("Solved the greedy problem, overall throughput = " + overallThroughput);
+        return objectiveVal;
     }
 }

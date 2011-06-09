@@ -103,5 +103,10 @@
       <artifactId>log4j</artifactId>
       <version>1.2.12</version>
     </dependency>
+    <dependency>
+      <groupId>cplex</groupId>
+      <artifactId>cplex</artifactId>
+      <version>122</version>
+    </dependency>
   </dependencies>
 </project>

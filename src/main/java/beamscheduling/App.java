@@ -15,10 +15,10 @@ import org.apache.log4j.Level;
  *
  */
 public class App {
+
     static Logger logger = Logger.getLogger("BeamScheduling");
 
-    public static void main( String[] args )
-    {
+    public static void main(String[] args) {
         HashMap subscribers;
         NetworkGenerator networkGenerator;
         Network network;
@@ -39,22 +39,31 @@ public class App {
         }
 
         // Handle options that matter
-        System.out.println("Random Seed: " + options.seed);
-        networkGenerator = Network.getGenerator(options.nodes, options.clients, options.sectors, 
-                                                options.width, options.height, options.seed);
+        //System.out.println("Random Seed: " + options.seed);
+        networkGenerator = Network.getGenerator(options.nodes, options.clients, options.sectors,
+                options.width, options.height, options.seed, options.theta, options.meanq, options.slotLength);
         network = networkGenerator.createCenteredRadialTree();
 
-        System.out.println(network);
-        network.draw(1024, 768, "Beam Scheduling Application");
+        //System.out.println(network);
+
 
         network.calculateBeamSets();
-        int step = 1;
-        int theta = 20;
-        Greedy greedy = new Greedy(network);
-        greedy.solve();
+
+        ILPSolve ilpSolve = new ILPSolve(network);
+        double ilpThpt = ilpSolve.solve();
+
 
         LPRound lpround = new LPRound(network);
-        lpround.solve();
+        double lprThpt = lpround.solve();
 
+
+        Greedy greedy = new Greedy(network);
+        double grdyThpt = greedy.solve();
+
+        //network.draw(1024, 768, "Beam Scheduling Application");
+        System.out.println("SEED\tWIDTH\tHEIGHT\tTHETA\tRELAYS\tSUBSCRIBERS\tSLOTLENGTH\tMEANQ\tILP\tLPR\tGDY");
+        System.out.println(options.seed + "\t" + options.width + "\t" + options.height + "\t" + options.theta + "\t" +
+                + options.nodes + "\t" + options.clients + "\t" + options.slotLength + "\t" + options.meanq + "\t"
+                + ilpThpt + "\t" + lprThpt + "\t" + grdyThpt);
     }
 }

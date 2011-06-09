@@ -47,12 +47,15 @@ public class Network<V, E>
     public HashSet subscribers;
     public Vertex[] relayList;
     public Vertex[] subList;
-    public int[] thetaSet = {20, 40}; // Brendan added
+    public static double meanQueueLength;
+    public static double timeslotLength;
+    public static int[] thetaSet = new int[1]; // Brendan added, for now just one theta kept
     public HashSet<Vertex>[][][] beamSet; // beamSet[i][k][l] = lth beam set for relay i, theta k
 
-    public Network(double width, double height) {
+    public Network(double width, double height, int theta) {
         this.width = width;
         this.height = height;
+        this.thetaSet[0] = theta;
     }
 
     /**
@@ -60,11 +63,14 @@ public class Network<V, E>
      * @param <V> the vertex type for the graph factory
      * @param <E> the edge type for the graph factory
      */
-    public static NetworkGenerator getGenerator(int numRelays, int numSubscribers, int sectors, double width, double height, long seed) {
-        NetworkGenerator gen = new NetworkGenerator(new NetworkFactory(width, height),
-                new VertexFactory(width, height, sectors),
+    public static NetworkGenerator getGenerator(int numRelays, int numSubscribers, int sectors, double width, double height, long seed, int theta, double meanq, double slotlen) {
+        NetworkGenerator gen = new NetworkGenerator(new NetworkFactory(width, height, theta),
+                new VertexFactory(width, height, sectors, meanq),
                 new EdgeFactory(), numRelays, numSubscribers, width, height);
         gen.setSeed(seed);
+        thetaSet[0] = theta;
+        meanQueueLength = meanq;
+        timeslotLength = slotlen;
         return (gen);
     }
 
@@ -143,9 +149,9 @@ public class Network<V, E>
                     float l_x = ((float) relay.location.getX() + ((float) (length * Math.sin(bm)))) * scale_x;
                     float l_y = ((float) relay.location.getY() + ((float) (length * Math.cos(bm)))) * scale_y;
 
-                    System.out.println("Trying to draw beam for relay " + relay + " (" + old_x + "," + old_y + ")");
-                    System.out.println("\tBeam Bearing: " + relay.bestBearing + " Range: " + length);
-                    System.out.println("\tBeam Shape: " + old_x + "," + old_y + " " + u_x + "," + u_y + " " + l_x + "," + l_y);
+//                    System.out.println("Trying to draw beam for relay " + relay + " (" + old_x + "," + old_y + ")");
+//                    System.out.println("\tBeam Bearing: " + relay.bestBearing + " Range: " + length);
+//                    System.out.println("\tBeam Shape: " + old_x + "," + old_y + " " + u_x + "," + u_y + " " + l_x + "," + l_y);
 
                     GeneralPath beamShape = new GeneralPath();
                     beamShape.moveTo(old_x, old_y);
@@ -225,7 +231,7 @@ public class Network<V, E>
                     }
                     if (tmp.isEmpty() || !tmp.get(tmp.size() - 1).containsAll(nextSet)) {
                         tmp.add(nextSet);
-                        System.out.println("beamSet[" + i + "][" + k + "] adding " + nextSet);
+                        //System.out.println("beamSet[" + i + "][" + k + "] adding " + nextSet);
                     }
                 }
                 this.beamSet[i][k] = tmp.toArray(this.beamSet[i][k]);
@@ -249,108 +255,5 @@ class BearingSub implements Comparable {
         return Double.compare(this.bearing, otherBS.bearing);
     }
 }
-//            SortedMap beamSet = new TreeMap();
-//            Iterator itr = this.relays.iterator();
-//
-//            // First we organize things for calculations
-//            while (itr.hasNext()) {
-//                Vertex relay = (Vertex) itr.next();
-//                TreeMap subscribers = new TreeMap();
-//
-//                // Calculate what SS's are even in range, then the bearing to them
-//                Iterator ss = this.subscribers.iterator();
-//                while (ss.hasNext()) {
-//                    Vertex subscriber = (Vertex) ss.next();
-//                    double throughput = relay.calculateThroughput(theta, subscriber);
-//                    if (throughput > 0) {
-//                        double bearing = relay.getBearing(subscriber);
-//                        ArrayList d = new ArrayList();
-//                        d.add(0, throughput);
-//                        d.add(1, subscriber);
-//                        subscribers.put(bearing, d);
-//                    }
-//                }
-//                beamSet.put(relay, subscribers);
-//            }
-//
-//            // Now we can calcuate beamsets sanely
-//            // Looping through beamSet which is organized like:
-//            // beamSet[relay] => subscribers[bearing] => [throughput, ss]
-//            itr = beamSet.keySet().iterator();
-//            int bestBearing = 0;
-//            double bestThroughput = 0.0;
-//            HashSet bestSet = null;
-//            while (itr.hasNext()) {
-//                Vertex relay = (Vertex) itr.next();
-//                SortedMap subscribers = (SortedMap) beamSet.get(relay);
-//                SortedMap beamContains = new TreeMap();
-//
-//                bestThroughput = 0.0;
-//                for (int i = 0; i < 360; i++) {
-//                    int halfTheta = theta / 2;
-//                    int upperBound = i + halfTheta;
-//                    if (upperBound > 360) {
-//                        upperBound -= 360;
-//                    }
-//                    int lowerBound = i - halfTheta;
-//                    if (lowerBound < 0) {
-//                        lowerBound += 360;
-//                    }
-//
-//                    Iterator brng = subscribers.keySet().iterator();
-//                    while (brng.hasNext()) {
-//                        double bearing = Double.valueOf(brng.next().toString()).doubleValue();
-//                        if (bearing <= upperBound && bearing >= lowerBound) {
-//                            ArrayList entry = (ArrayList) subscribers.get(bearing);
-//                            beamContains.put(bearing, entry);
-//                        }
-//                        // Remove things that fall out of the back of the beam
-//                        try {
-//                            while (Double.valueOf(beamContains.firstKey().toString()).doubleValue() < lowerBound) {
-//                                beamContains.remove(beamContains.firstKey());
-//                            }
-//                        } catch (NoSuchElementException ex) {
-//                            // There's nothing to try to remove
-//                        }
-//                    }
-//
-//                    if (beamContains.keySet().size() > 0) {
-//                        // Print the beam set for this degree position
-//                        Iterator bci = beamContains.keySet().iterator();
-//                        double throughput = 0.0;
-//                        HashSet subs = new HashSet();
-//                        while (bci.hasNext()) {
-//                            double bearing = Double.valueOf(bci.next().toString()).doubleValue();
-//                            ArrayList entry = (ArrayList) beamContains.get(bearing);
-//                            Vertex sub = (Vertex) entry.get(1);
-//                            // Ensure we're only calculating for preferred relays
-//                            if (sub.preferredRelay == relay) {
-//                                throughput += Double.valueOf(entry.get(0).toString()).doubleValue();
-//                                subs.add(sub);
-//                            } else {
-//                                // Save it for stage 3, because now we at least know the beam *can* reach it
-//                            }
-//                        }
-//                        if (throughput >= bestThroughput) {
-//                            bestThroughput = throughput;
-//                            bestBearing = i;
-//                            relay.bestBearing = i;
-//                            bestSet = subs;
-//                        }
-//                    }
-//                }
-//
-//                System.out.println("Relay: " + relay + " Bearing: " + bestBearing + " Throughput: " + bestThroughput);
-//
-//                Iterator sitr = bestSet.iterator();
-//                while (sitr.hasNext()) {
-//                    Vertex sub = (Vertex) sitr.next();
-//                    Edge e = new Edge();
-//                    e.type = 2;
-//                    e.length = Point.roundTwoDecimals(sub.location.distance(relay.location));
-//                    this.addEdge(((E) e), ((V) sub), ((V) relay));
-//                }
-//            }
-//        }
-//    }
+
 

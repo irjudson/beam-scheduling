@@ -20,7 +20,7 @@ public class CmdLineOptions {
 
   @Option(name = "-c", aliases = {"--clients"}, metaVar = "CLIENTS",
           usage = "Number of clients using the network.")
-    public int clients = 15;
+    public int clients = 20;
 
   @Option(name = "-m", aliases = {"--sectors"}, metaVar = "SECTORS",
           usage = "Number of sectors per antenna / node.")
@@ -31,7 +31,16 @@ public class CmdLineOptions {
     public long seed = System.nanoTime();
     //public long seed = (long) (new Long("1307379278874304000")).longValue(); 
 
-  @Option(name = "-l", aliases = {"--theta"}, metaVar = "THETA",
+  @Option(name = "-t", aliases = {"--theta"}, metaVar = "THETA",
           usage = "Specify beam width in degrees for theta.")
-    public int theta = 10;
+    public int theta = 20;
+  
+  @Option(name = "-u", aliases = {"--meanq"}, metaVar = "MEANQ",
+          usage = "Specify the mean queue length for each subscriber.")
+    public double meanq = 5000.0;
+  
+    @Option(name = "-l", aliases = {"--slotlength"}, metaVar = "SLOT",
+          usage = "Specify the mean queue length for each subscriber.")
+    public double slotLength = 1.0E-3;
+    
 }
