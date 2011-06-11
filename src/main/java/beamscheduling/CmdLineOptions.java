@@ -16,11 +16,11 @@ public class CmdLineOptions {
 
   @Option(name = "-n", aliases = {"--nodes"}, metaVar = "NODES",
           usage = "Number of nodes in the base network.")
-    public int nodes = 5;
+    public int nodes = 14;
 
   @Option(name = "-c", aliases = {"--clients"}, metaVar = "CLIENTS",
           usage = "Number of clients using the network.")
-    public int clients = 20;
+    public int clients = 80;
 
   @Option(name = "-m", aliases = {"--sectors"}, metaVar = "SECTORS",
           usage = "Number of sectors per antenna / node.")
@@ -33,11 +33,11 @@ public class CmdLineOptions {
 
   @Option(name = "-t", aliases = {"--theta"}, metaVar = "THETA",
           usage = "Specify beam width in degrees for theta.")
-    public int theta = 20;
+    public int theta = 40;
   
   @Option(name = "-u", aliases = {"--meanq"}, metaVar = "MEANQ",
           usage = "Specify the mean queue length for each subscriber.")
-    public double meanq = 5000.0;
+    public double meanq = 50000.0;
   
     @Option(name = "-l", aliases = {"--slotlength"}, metaVar = "SLOT",
           usage = "Specify the mean queue length for each subscriber.")
