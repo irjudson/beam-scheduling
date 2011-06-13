@@ -62,9 +62,9 @@ public class App {
 
         //network.draw(1024, 768, "Beam Scheduling Application");
         
-        System.out.println("SEED\tWIDTH\tHEIGHT\tTHETA\tRELAYS\tSUBSCRIBERS\tSLOTLENGTH\tMEANQ\tILP\tLPR\tGDY");
-        System.out.println(options.seed + "\t" + options.width + "\t" + options.height + "\t" + options.theta + "\t" +
-                + options.nodes + "\t" + options.clients + "\t" + options.slotLength + "\t" + options.meanq + "\t"
-                + ilpThpt + "\t" + lprThpt + "\t" + grdyThpt);
+        System.out.println("Seed, Width, Height, Theta, Relays, Subscribers, Slot Length, MeanQ, ILP, LPR, GDY");
+        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.theta + ", " +
+                + options.nodes + ", " + options.clients + ", " + options.slotLength + ", " + options.meanq + ", "
+                + ilpThpt + ", " + lprThpt + ", " + grdyThpt);
     }
 }

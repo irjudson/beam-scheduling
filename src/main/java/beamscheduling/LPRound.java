@@ -127,7 +127,7 @@ class LPRound {
             IloObjective obj = cplex.maximize(maximizeExpr);
             cplex.add(obj);
             cplex.setOut(null);
-//            cplex.exportModel("MaxTotalWeight.lp");
+            //cplex.exportModel("MaxTotalWeight.lp");
             if (cplex.solve()) {
                 double cplexTotal = cplex.getObjValue();
                 //System.out.println("MILP objective value = " + cplexTotal);
@@ -159,7 +159,6 @@ class LPRound {
                                     reward += subL[j].queueLength * Math.min(subL[j].queueLength, rate[i][j][k] * xSum[i][j]);
                                 }
                             }
-                            //System.out.println("r: " + r + " k: " + k + " l: " + l + "  reward = " + reward);
                             if (reward >= bestReward) {
                                 bestReward = reward;
                                 r.bestK = k;
@@ -167,8 +166,6 @@ class LPRound {
                             }
                         }
                     }
-                    //System.out.println("relay " + r + ": best theta " + network.thetaSet[r.bestK] + " best l " + r.bestL);
-
                 }
 
 
@@ -192,8 +189,6 @@ class LPRound {
                     objectiveVal += sub.queueLength * Math.min(sub.queueLength, maxThroughput);
 
                 }
-                //System.out.println("LPRound throughput = " + overallThroughput);
-
                 return objectiveVal;
             }
 

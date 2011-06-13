@@ -29,7 +29,6 @@ public class CmdLineOptions {
   @Option(name = "-s", aliases = {"--seed"}, metaVar = "SEED",
           usage = "Specify the random seed, defaults to a random seed.")
     public long seed = System.nanoTime();
-    //public long seed = (long) (new Long("1307379278874304000")).longValue(); 
 
   @Option(name = "-t", aliases = {"--theta"}, metaVar = "THETA",
           usage = "Specify beam width in degrees for theta.")
@@ -40,7 +39,7 @@ public class CmdLineOptions {
     public double meanq = 50000.0;
   
     @Option(name = "-l", aliases = {"--slotlength"}, metaVar = "SLOT",
-          usage = "Specify the mean queue length for each subscriber.")
+          usage = "Specify the slot length for each subscriber.")
     public double slotLength = 1.0E-3;
     
 }
