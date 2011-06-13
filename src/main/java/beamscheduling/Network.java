@@ -199,6 +199,8 @@ public class Network<V, E>
         for (int i = 0; i < relayList.length; i++) {
             Vertex relay = relayList[i];
 
+            //System.out.println("computing beam sets for relay " + i);
+
             for (int k = 0; k < this.thetaSet.length; k++) {
                 BearingSub[] sortedSubs = new BearingSub[numSubs];
                 int ns = 0;
@@ -212,19 +214,20 @@ public class Network<V, E>
                 sortedSubs = Arrays.copyOf(sortedSubs, ns);
                 Arrays.sort(sortedSubs);
 
-
                 this.beamSet[i][k] = new HashSet[0];
                 ArrayList<HashSet<Vertex>> tmp = new ArrayList();
                 for (int start = 0; start < sortedSubs.length; start++) {
                     HashSet<Vertex> nextSet = new HashSet<Vertex>();
-                    int end = start;
+                    int end;
+                    end = start;
                     double endBearing = sortedSubs[end].bearing;
-                    if (endBearing < sortedSubs[start].bearing) {
-                        endBearing += 360.0;
-                    }
+                    //System.out.println("start bearing: " + sortedSubs[start].bearing);
                     while (endBearing - sortedSubs[start].bearing <= this.thetaSet[k]) {
+                        //System.out.println("end bearing: " + sortedSubs[end].bearing);
                         nextSet.add(sortedSubs[end].sub);
                         end = (end + 1) % sortedSubs.length;
+                        if (end == start)
+                            break;
                         endBearing = sortedSubs[end].bearing;
                         if (endBearing < sortedSubs[start].bearing) {
                             endBearing += 360.0;
@@ -256,5 +259,3 @@ class BearingSub implements Comparable {
         return Double.compare(this.bearing, otherBS.bearing);
     }
 }
-
-

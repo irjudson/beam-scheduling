@@ -46,8 +46,11 @@ public class App {
 
         //System.out.println(network);
 
-
+        //System.out.println("seed = " + options.seed);
+        
         network.calculateBeamSets();
+        
+        //System.out.println("finished calculating beam sets");
 
         ILPSolve ilpSolve = new ILPSolve(network);
         double ilpThpt = ilpSolve.solve();
