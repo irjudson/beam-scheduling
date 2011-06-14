@@ -17,9 +17,10 @@ for s in $SUBSCRIBERS; do
    for m in $MEANQ; do
     for b in $SIZE; do
      for i in $ITERATIONS; do
-      ( java -Djava.library.path=${CPLEXBIN} -jar ${JAR} -t $t -c $s -w $b -h $b -u $m -n $r  >& output.$s.$r.$t.$m.$b.$i ) &
+      ( java -Djava.library.path=${CPLEXBIN} -jar ${JAR} -t $t -c $s -w $b -h $b -u $m -n $r  >& output/output.$s.$r.$t.$m.$b.$i ) &
      done
      wait
+     cat output/output.$s.$r.$t.$m.$b.* >> output.all
      echo "10 jobs finished..."
     done
    done
