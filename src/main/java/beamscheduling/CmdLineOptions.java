@@ -20,7 +20,7 @@ public class CmdLineOptions {
 
   @Option(name = "-c", aliases = {"--clients"}, metaVar = "CLIENTS",
           usage = "Number of clients using the network.")
-    public int clients = 20;
+    public int clients = 40;
 
   @Option(name = "-m", aliases = {"--sectors"}, metaVar = "SECTORS",
           usage = "Number of sectors per antenna / node.")
@@ -32,7 +32,7 @@ public class CmdLineOptions {
 
   @Option(name = "-t", aliases = {"--theta"}, metaVar = "THETA",
           usage = "Specify beam width in degrees for theta.")
-    public int theta = 50;
+    public int theta = 30;
   
   @Option(name = "-u", aliases = {"--meanq"}, metaVar = "MEANQ",
           usage = "Specify the mean queue length for each subscriber.")
@@ -44,6 +44,6 @@ public class CmdLineOptions {
     
   @Option(name = "-k", aliases = {"--channels"}, metaVar = "CHANNELS",
           usage = "Specify the number of channels available at each relay.")
-    public int channels = 2;
+    public int channels = 4;
     
 }
