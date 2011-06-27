@@ -81,7 +81,17 @@ public class ILPSolve {
                         expr.addTerm(1, x[i][j][k]);
                     }
                 }
-                cplex.addLe(expr, 1);
+                cplex.addLe(expr, 1.0);
+            }
+
+            for (int i = 0; i < numRelays; i++) {
+                IloLinearNumExpr expr = cplex.linearNumExpr();
+                for (int j = 0; j < numSubscribers; j++) {
+                    for (int k = 0; k < numThetas; k++) {
+                        expr.addTerm(1, x[i][j][k]);
+                    }
+                }
+                cplex.addLe(expr, network.numChannels);
             }
 
             for (int i = 0; i < numRelays; i++) {
@@ -97,17 +107,17 @@ public class ILPSolve {
 
             for (int i = 0; i < numRelays; i++) {
                 for (int j = 0; j < numSubscribers; j++) {
+                    IloLinearNumExpr rhs = cplex.linearNumExpr();
                     for (int k = 0; k < numThetas; k++) {
-                        IloLinearNumExpr lhs = cplex.linearNumExpr();
                         int numSets = network.beamSet[i][k].length;
                         for (int l = 0; l < numSets; l++) {
                             if (network.beamSet[i][k][l].contains(sub[j])) {
-                                lhs.addTerm(1, s[i][k][l]);
+                                rhs.addTerm(1, s[i][k][l]);
                             }
                         }
-                        IloLinearNumExpr rhs = cplex.linearNumExpr();
-                        rhs.addTerm(1, x[i][j][k]);
-                        cplex.addGe(lhs, rhs);
+                        IloLinearNumExpr lhs = cplex.linearNumExpr();
+                        lhs.addTerm(1, x[i][j][k]);
+                        cplex.addLe(lhs, rhs);
                     }
                 }
             }
@@ -140,8 +150,21 @@ public class ILPSolve {
 //            cplex.exportModel("MaxTotalWeight.lp");
             if (cplex.solve()) {
                 double cplexTotal = cplex.getObjValue();
-                //System.out.println("ILP objective value = " + cplexTotal);
-                //System.out.println("Solution status = " + cplex.getStatus());
+
+
+//                for (int i = 0; i < numRelays; i++) {
+//                    for (int j = 0; j < numSubscribers; j++) {
+//                        IloLinearNumExpr rhs = cplex.linearNumExpr();
+//                        for (int k = 0; k < numThetas; k++) {
+//                            if (cplex.getValue(x[i][j][k]) > threshold) {
+//                                System.out.println("x[" + relay[i] + "," + sub[j] + "," + k + "] = 1");
+//                            }
+//                        }
+//                    }
+//                }
+//                for (int j = 0; j < numSubscribers; j++) {
+//                    System.out.println("sub " + sub[j] + " objective " + sub[j].queueLength * cplex.getValue(y[j]));
+//                }
                 return cplexTotal;
             }
 

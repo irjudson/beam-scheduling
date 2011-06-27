@@ -51,8 +51,9 @@ public class Network<V, E>
     public static double timeslotLength;
     public static int[] thetaSet = new int[2]; // Brendan added, for now just two theta kept
     public HashSet<Vertex>[][][] beamSet; // beamSet[i][k][l] = lth beam set for relay i, theta k
+    public static int numChannels;
 
-    public Network(double width, double height, int theta) {
+    public Network(double width, double height, int theta, int channels) {
         this.width = width;
         this.height = height;
         this.thetaSet[0] = theta;
@@ -64,14 +65,15 @@ public class Network<V, E>
      * @param <V> the vertex type for the graph factory
      * @param <E> the edge type for the graph factory
      */
-    public static NetworkGenerator getGenerator(int numRelays, int numSubscribers, int sectors, double width, double height, long seed, int theta, double meanq, double slotlen) {
-        NetworkGenerator gen = new NetworkGenerator(new NetworkFactory(width, height, theta),
+    public static NetworkGenerator getGenerator(int numRelays, int numSubscribers, int sectors, double width, double height, long seed, int theta, double meanq, double slotlen, int channels) {
+        NetworkGenerator gen = new NetworkGenerator(new NetworkFactory(width, height, theta, channels),
                 new VertexFactory(width, height, sectors, meanq),
                 new EdgeFactory(), numRelays, numSubscribers, width, height);
         gen.setSeed(seed);
         thetaSet[0] = theta;
         meanQueueLength = meanq;
         timeslotLength = slotlen;
+        numChannels = channels;
         return (gen);
     }
 

@@ -41,33 +41,36 @@ public class App {
         // Handle options that matter
         //System.out.println("Random Seed: " + options.seed);
         networkGenerator = Network.getGenerator(options.nodes, options.clients, options.sectors,
-                options.width, options.height, options.seed, options.theta, options.meanq, options.slotLength);
+                options.width, options.height, options.seed, options.theta, options.meanq, options.slotLength, options.channels);
         network = networkGenerator.createCenteredRadialTree();
 
         //System.out.println(network);
 
         //System.out.println("seed = " + options.seed);
-        
+
         network.calculateBeamSets();
-        
+
         //System.out.println("finished calculating beam sets");
 
         ILPSolve ilpSolve = new ILPSolve(network);
         double ilpThpt = ilpSolve.solve();
 
 
-        LPRound lpround = new LPRound(network);
-        double lprThpt = lpround.solve();
+//        LPRound lpround = new LPRound(network);
+//        double lprThpt = lpround.solve();
+
+        Greedy1 greedy1 = new Greedy1(network);
+        double grdyThpt1 = greedy1.solve();
 
 
-        Greedy greedy = new Greedy(network);
-        double grdyThpt = greedy.solve();
+        Greedy2 greedy2 = new Greedy2(network);
+        double grdyThpt2 = greedy2.solve();
 
         //network.draw(1024, 768, "Beam Scheduling Application");
-        
-        System.out.println("Seed, Width, Height, Theta, Relays, Subscribers, Slot Length, MeanQ, ILP, LPR, GDY");
-        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.theta + ", " +
-                + options.nodes + ", " + options.clients + ", " + options.slotLength + ", " + options.meanq + ", "
-                + ilpThpt + ", " + lprThpt + ", " + grdyThpt);
+
+        System.out.println("Seed, Width, Height, Theta, Relays, Subscribers, Slot Length, MeanQ, Channels, ILP, GDY1, GDY2");
+        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.theta + ", "
+                + +options.nodes + ", " + options.clients + ", " + options.slotLength + ", " + options.meanq + ", " + options.channels + ", "
+                + ilpThpt + ", " + grdyThpt1 + ", " + grdyThpt2);
     }
 }

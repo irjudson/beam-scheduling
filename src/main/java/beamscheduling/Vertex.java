@@ -14,7 +14,7 @@ public class Vertex implements Comparable {
     public Point2D location;        
     // maps int sector -> array of vertices.
     public HashMap sectorMap;
-    public HashSet beamSet;
+    //public HashSet beamSet;
     public int     activeSectors;
     public int     type;  // 0 - Gateway, 1 - RS, 2 - SS
     public float   inThroughput;
@@ -22,6 +22,7 @@ public class Vertex implements Comparable {
     public Vertex  preferredRelay;
     public double  bestBearing;
     public int     bestK, bestL; // Brendan added
+    public int     allocatedChannels;
     public double  queueLength;
     private double gainReceiver = Math.pow(10, 2.0 / 10);       // 2 dB
     private double frequency = 5.8 * Math.pow(10, 9);           // 5.8 Ghz

@@ -76,6 +76,16 @@ class LPRound {
 
             for (int i = 0; i < numRelays; i++) {
                 IloLinearNumExpr expr = cplex.linearNumExpr();
+                for (int j = 0; j < numSubscribers; j++) {
+                    for (int k = 0; k < numThetas; k++) {
+                        expr.addTerm(1, x[i][j][k]);
+                    }
+                }
+                cplex.addLe(expr, network.numChannels);
+            }
+
+            for (int i = 0; i < numRelays; i++) {
+                IloLinearNumExpr expr = cplex.linearNumExpr();
                 for (int k = 0; k < numThetas; k++) {
                     int numSets = network.beamSet[i][k].length;
                     for (int l = 0; l < numSets; l++) {
@@ -87,17 +97,17 @@ class LPRound {
 
             for (int i = 0; i < numRelays; i++) {
                 for (int j = 0; j < numSubscribers; j++) {
+                    IloLinearNumExpr rhs = cplex.linearNumExpr();
                     for (int k = 0; k < numThetas; k++) {
-                        IloLinearNumExpr lhs = cplex.linearNumExpr();
                         int numSets = network.beamSet[i][k].length;
                         for (int l = 0; l < numSets; l++) {
                             if (network.beamSet[i][k][l].contains(subL[j])) {
-                                lhs.addTerm(1, s[i][k][l]);
+                                rhs.addTerm(1, s[i][k][l]);
                             }
                         }
-                        IloLinearNumExpr rhs = cplex.linearNumExpr();
-                        rhs.addTerm(1, x[i][j][k]);
-                        cplex.addGe(lhs, rhs);
+                        IloLinearNumExpr lhs = cplex.linearNumExpr();
+                        lhs.addTerm(1, x[i][j][k]);
+                        cplex.addLe(lhs, rhs);
                     }
                 }
             }
@@ -149,18 +159,13 @@ class LPRound {
                 // Loop 2: Choose the beam sets for each relay
                 for (int i = 0; i < network.relayList.length; i++) {
                     Vertex r = network.relayList[i];
+                    r.allocatedChannels = 0;
                     for (int k = 0; k < network.thetaSet.length; k++) {
-                        double bestReward = 0.0;
+                        double bestSVal = 0.0;
                         for (int l = 0; l < network.beamSet[i][k].length; l++) {
-                            double reward = 0.0;
-                            HashSet<Vertex> beamSet = network.beamSet[i][k][l];
-                            for (int j = 0; j < numSubscribers; j++) {
-                                if (beamSet.contains(subL[j])) {
-                                    reward += subL[j].queueLength * Math.min(subL[j].queueLength, rate[i][j][k] * xSum[i][j]);
-                                }
-                            }
-                            if (reward >= bestReward) {
-                                bestReward = reward;
+                            double sVal = cplex.getValue(s[i][k][l]);
+                            if (sVal >= bestSVal) {
+                                bestSVal = sVal;
                                 r.bestK = k;
                                 r.bestL = l;
                             }
@@ -168,27 +173,54 @@ class LPRound {
                     }
                 }
 
-
-                // Loop 3: Find a better Relay if there is one
-                // and it's beam is covering this node
-                double objectiveVal = 0.0;
-
-                for (int i = 0; i < network.subList.length; i++) {
-                    Vertex sub = network.subList[i];
-                    double maxThroughput = 0.0;
-                    sub.preferredRelay = null;
-                    for (int j = 0; j < network.relayList.length; j++) {
-                        Vertex r = network.relayList[j];
-                        HashSet<Vertex> bestBeamSet = network.beamSet[j][r.bestK][r.bestL];
-                        double throughput = r.calculateThroughput(network.thetaSet[r.bestK], sub) * network.timeslotLength;
-                        if (bestBeamSet.contains(sub) && throughput > maxThroughput) {
-                            maxThroughput = throughput;
-                            sub.preferredRelay = r;
+                // Loop 3
+                for (int j = 0; j < network.subList.length; j++) {
+                    Vertex sub = network.subList[j];
+                    if (sub.preferredRelay == null) {
+                        VertexValue[] vv = new VertexValue[network.relayList.length];
+                        for (int i = 0; i < network.relayList.length; i++) {
+                            Vertex r = network.relayList[i];
+                            HashSet<Vertex> bs = network.beamSet[i][r.bestK][r.bestL];
+                            int theta = network.thetaSet[r.bestK];
+                            if (bs.contains(sub)) {
+                                vv[i] = new VertexValue(r, sub.queueLength * Math.min(sub.queueLength, r.calculateThroughput(theta, sub) * network.timeslotLength));
+                            } else {
+                                vv[i] = new VertexValue(r, 0.0);
+                            }
+                        }
+                        Arrays.sort(vv);
+                        for (int i = 0; i < network.relayList.length; i++) {
+                            if (vv[i].value > 0.0 && vv[i].vertex.allocatedChannels < network.numChannels) {
+                                sub.preferredRelay = vv[i].vertex;
+                                vv[i].vertex.allocatedChannels++;
+                                break;
+                            }
                         }
                     }
-                    objectiveVal += sub.queueLength * Math.min(sub.queueLength, maxThroughput);
-
                 }
+
+                double objectiveVal = 0.0;
+
+                for (int j = 0; j < network.subList.length; j++) {
+                    Vertex sub = network.subList[j];
+                    if (sub.preferredRelay != null) {
+                        int prefRelayIndex = 0;
+                        for (int i = 0; i < network.relayList.length; i++) {
+                            if (sub.preferredRelay == network.relayList[i]) {
+                                prefRelayIndex = i;
+                            }
+                        }
+                        //System.out.println(s + " assigned to " + s.preferredRelay);
+                        HashSet<Vertex> bs = network.beamSet[prefRelayIndex][sub.preferredRelay.bestK][sub.preferredRelay.bestL];
+                        if (!bs.contains(s)) {
+                            System.out.println(sub + " is NOT contained in beam set of " + sub.preferredRelay);
+                        }
+                        double objV = sub.queueLength * Math.min(sub.queueLength, sub.preferredRelay.calculateThroughput(network.thetaSet[sub.preferredRelay.bestK], sub) * network.timeslotLength);
+                        //System.out.println("sub " + s + " greedy obj val = " + obj);
+                        objectiveVal += objV;
+                    }
+                }
+
                 return objectiveVal;
             }
 

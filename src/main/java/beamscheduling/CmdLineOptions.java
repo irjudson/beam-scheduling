@@ -42,4 +42,8 @@ public class CmdLineOptions {
           usage = "Specify the slot length for each subscriber.")
     public double slotLength = 1.0E-3;
     
+  @Option(name = "-k", aliases = {"--channels"}, metaVar = "CHANNELS",
+          usage = "Specify the number of channels available at each relay.")
+    public int channels = 2;
+    
 }
