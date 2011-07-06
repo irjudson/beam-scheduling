@@ -49,7 +49,7 @@ public class Network<V, E>
     public Vertex[] subList;
     public static double meanQueueLength;
     public static double timeslotLength;
-    public static int[] thetaSet = new int[2]; // Brendan added, for now just two theta kept
+    public static int[] thetaSet = new int[1]; // Brendan added, for now just two theta kept
     public HashSet<Vertex>[][][] beamSet; // beamSet[i][k][l] = lth beam set for relay i, theta k
     public static int numChannels;
 
@@ -57,7 +57,7 @@ public class Network<V, E>
         this.width = width;
         this.height = height;
         this.thetaSet[0] = theta;
-        this.thetaSet[1] = 2 * theta;
+        //this.thetaSet[1] = 2 * theta;
     }
 
     /**
