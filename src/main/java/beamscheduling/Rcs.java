@@ -49,11 +49,11 @@ public class Rcs {
 
         Transformer<Edge, Double> wtTransformer = new Transformer<Edge, Double>() {
             public Double transform(Edge e) {
-                return e.capacity;
+                return e.length;
             }
         };
 
-        //        DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer);
+        //DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer);
         DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network);
         Vertex source = network.randomSub();
         Vertex destination = network.randomSub();
