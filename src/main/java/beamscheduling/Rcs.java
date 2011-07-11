@@ -53,27 +53,31 @@ public class Rcs {
             }
         };
 
-        //DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer);
-        DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network);
-        Vertex source = network.randomSub();
-        Vertex destination = network.randomSub();
+        DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer);
+        //DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network);
+        Vertex source = network.randomRelay();
+        Vertex destination = network.randomRelay();
         while (source == destination) {
-            destination = network.randomSub();
+            destination = network.randomRelay();
         }
 
         System.out.println("Source: " + source);
         System.out.println("Destination: " + destination);
+        source.type = 3;
+        destination.type = 4;
 
         List<Edge> dpath = dsp.getPath(source, destination);
+        double totalTP = 0.0;
         for(Edge e: dpath) {
             Pair<Vertex> ends = network.getEndpoints(e);
             e.type = 1;
+            totalTP += e.capacity;
             System.out.println(ends.getFirst() + " -> " + ends.getSecond());
         }
         
         network.draw(1024, 768, "Routing and Channel Selection Application");
 
         System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra");
-        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels);
+        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + totalTP);
     }
 }

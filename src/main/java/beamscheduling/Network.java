@@ -123,6 +123,8 @@ public class Network<V, E>
                     return Color.GREEN;
                 } else if (v.type == 3) {
                     return Color.RED;
+                } else if (v.type == 4) {
+                    return Color.BLUE;
                 } else {
                     return Color.YELLOW;
                 }
@@ -213,6 +215,10 @@ public class Network<V, E>
 
     public Vertex randomSub() {
         return this.subList[this.random.nextInt(this.subList.length)];
+    }
+
+    public Vertex randomRelay() {
+        return this.relayList[this.random.nextInt(this.relayList.length)];
     }
 
     public void calculateBeamSets() {

@@ -82,19 +82,23 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
 
         for(Vertex v1: network.subList) {
             double dist = 100000000.0;
+            double tp = 0.0;
             Vertex best = null;
             for(Vertex v2: network.relayList) {
                 double d = v1.location.distance(v2.location);
                 if (d < dist) {
                     dist = d;
+                    tp = v1.calculateThroughput(1, v1);
                     best = v2;
                 }
             }
-            E edge = edgeFactory.create();
-            ((Edge)edge).length = dist;
-            ((Edge)edge).capacity = v1.calculateThroughput(1, best);
-            System.out.println(v1 + " : " + best);
-            network.addEdge(edge, (V)v1, (V)best);
+
+            if (tp > 0.0) {
+                E edge = edgeFactory.create();
+                ((Edge)edge).length = dist;
+                ((Edge)edge).capacity = tp;
+                network.addEdge(edge, (V)v1, (V)best);
+            }
         }
 
         network.random = random;
