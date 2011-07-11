@@ -68,16 +68,19 @@ public class Rcs {
 
         List<Edge> dpath = dsp.getPath(source, destination);
         double totalTP = 0.0;
+        double totalLength = 0.0;
         for(Edge e: dpath) {
             Pair<Vertex> ends = network.getEndpoints(e);
             e.type = 1;
             totalTP += e.capacity;
+            totalLength += e.length;
             System.out.println(ends.getFirst() + " -> " + ends.getSecond());
         }
-        
+
+        System.out.println("Dijkstra: (cap) " + totalTP + " (length) " + totalLength);
         network.draw(1024, 768, "Routing and Channel Selection Application");
 
-        System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra");
-        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + totalTP);
+        //        System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra");
+        //        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + totalTP);
     }
 }

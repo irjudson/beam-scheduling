@@ -68,8 +68,7 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
 
         for(Vertex v1: network.relayList) {
             for(Vertex v2: network.relayList) {
-                if (v1 != v2 && network.findEdge((V)v1, (V)v2) == null
-                    && random.nextInt(4) == 2) {
+                if (v1 != v2 && network.findEdge((V)v1, (V)v2) == null) {
                     double dist = Point.roundTwoDecimals(v1.location.distance(v2.location));
                     // Check for connectivity & throughput
                     E edge = edgeFactory.create();
