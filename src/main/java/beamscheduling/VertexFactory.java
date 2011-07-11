@@ -13,13 +13,23 @@ class VertexFactory implements Factory<Vertex> {
     double meanQueueLength;
     Random generator;
 
-    public VertexFactory(double width, double height, int sectors, double meanq) {
-        this.width = width;
-        this.height = height;
-        this.sectors = sectors;
-        this.meanQueueLength = meanq;
-        generator = new Random();
-    }
+    public VertexFactory(double width, double height, int sectors, double meanq)
+        {
+            this.width = width;
+            this.height = height;
+            this.sectors = sectors;
+            this.meanQueueLength = meanq;
+            generator = new Random();
+        }
+    
+    public VertexFactory(double width, double height)
+        {
+            this.width = width;
+            this.height = height;
+            this.sectors = 0;
+            this.meanQueueLength = 0;
+            generator = new Random();
+        }
 
     public Vertex create() {
         double x = Point.roundTwoDecimals(generator.nextDouble());

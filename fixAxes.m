@@ -8,7 +8,7 @@ function fixAxes
 %---------------------------------------
 s = get(0,'showhiddenhandles');
 set(0,'showhiddenhandles','on');
-newpos = [0.13 0.135 0.775 0.75];    %// default is [0.13 0.11 0.775 0.815]
+newpos = [0.17 0.16 0.775 0.815];    %// default is [0.13 0.11 0.775 0.815]
 figs = get(0,'children');
 if (~isempty(figs))
   for k=1:length(figs)

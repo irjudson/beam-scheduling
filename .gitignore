@@ -1,3 +1,6 @@
 target/*
 output*
 *.out
+*.m
+*.eps
+

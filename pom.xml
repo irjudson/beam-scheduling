@@ -39,7 +39,11 @@
           </descriptorRefs>
           <archive>
             <manifest>
+<!--
               <mainClass>beamscheduling.App</mainClass>
+              <packageName>beamscheduling</packageName>
+-->
+              <mainClass>beamscheduling.Rcs</mainClass>
               <packageName>beamscheduling</packageName>
             </manifest>
           </archive>

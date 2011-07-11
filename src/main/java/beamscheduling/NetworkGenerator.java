@@ -43,22 +43,60 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
     public Network<V,E> create() {
         Network<V,E> network = null;
         network = this.networkFactory.create();
+        network.relays = new HashSet(numRelays);
+        network.subscribers = new HashSet(numSubscribers);
+
+        network.relayList = new Vertex[numRelays];
         for(int i=0; i<numRelays; i++) {
-            network.addVertex(vertexFactory.create());
+            V node = vertexFactory.create();
+            Vertex v = (Vertex)node;
+            network.addVertex(node);
+            network.relays.add(v);
+            network.relayList[i] = v;
         }
 
-        for(V v1: network.getVertices()) {
-            for(V v2: network.getVertices()) {
-                if (v1 != v2 && network.findEdge(v1,v2) == null) {
-                    double dist = Point.roundTwoDecimals(((Vertex)v1).location.distance(((Vertex)v2).location));
+        network.subList = new Vertex[numSubscribers];
+        for(int i = 0; i < numSubscribers; i++) {
+            V node = vertexFactory.create();
+            Vertex v = (Vertex)node;
+            v.type = 2;
+            // Mark this vertex as a client.
+            network.addVertex(node);
+            network.subscribers.add(v);
+            network.subList[i] = v;
+        }
+
+        for(Vertex v1: network.relayList) {
+            for(Vertex v2: network.relayList) {
+                if (v1 != v2 && network.findEdge((V)v1, (V)v2) == null
+                    && random.nextInt(4) == 2) {
+                    double dist = Point.roundTwoDecimals(v1.location.distance(v2.location));
                     // Check for connectivity & throughput
                     E edge = edgeFactory.create();
-                    ((Edge)edge).length = dist;
-                    network.addEdge(edge, v1, v2);
+                    ((Edge)edge).length = v1.calculateThroughput(1, v2); //dist;
+                    ((Edge)edge).capacity = v1.calculateThroughput(1, v2);
+                    network.addEdge(edge, (V)v1, (V)v2);
                 }
             }
         }
 
+        for(Vertex v1: network.subList) {
+            double maxTP = 0.0;
+            Vertex best = null;
+            for(Vertex v2: network.relayList) {
+                double tp = v1.calculateThroughput(1,v2);
+                if (tp > maxTP) {
+                    maxTP = tp;
+                    best = v2;
+                }
+            }
+            E edge = edgeFactory.create();
+            ((Edge)edge).length = maxTP; //Point.roundTwoDecimals(v1.location.distance(best.location));
+            ((Edge)edge).capacity = maxTP;
+            network.addEdge(edge, (V)v1, (V)best);
+        }
+
+        network.random = random;
         return network;
     }
 
@@ -77,20 +115,17 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
         center.location.setLocation(network.width/2, network.height/2);
         double max_radius = center.calculateRange(center.sectors);
 
-        //System.out.println("Center: " + center.location.getX() + "," + center.location.getY());
-        //System.out.println("Maximum Distance: " + max_radius);
-
         // Create the rest of the nodes
         network.relayList = new Vertex[numRelays];
         for(int i=0; i<numRelays; i++) {
             V node = vertexFactory.create();
             Vertex n = (Vertex)node;
             n.type = 1;
-            double theta = (i * 360.0 / numRelays * Math.PI ) / 180.0; // changed by Brendan so that 0 and numRelays-1 don't overlap
+            // changed by Brendan so that 0 and numRelays-1 don't overlap
+            double theta = (i * 360.0 / numRelays * Math.PI ) / 180.0; 
             double radius = random.nextDouble() * max_radius;
             n.location.setLocation(center.location.getX() + (radius * Math.cos(theta)), 
                                    center.location.getY() + (radius * Math.sin(theta)));
-            //System.out.println("Node: " + n.id + " (" + n.location.getX() + ","+ n.location.getY() + ")");
             network.addVertex(node);
             network.relays.add(n);
             network.relayList[i] = n;
@@ -118,6 +153,7 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             network.subscribers.add(v);
             network.subList[i] = v;
         }
+        network.random = random;
         return network;
     }
 

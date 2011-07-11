@@ -14,7 +14,6 @@ public class Vertex implements Comparable {
     public Point2D location;        
     // maps int sector -> array of vertices.
     public HashMap sectorMap;
-    //public HashSet beamSet;
     public int     activeSectors;
     public int     type;  // 0 - Gateway, 1 - RS, 2 - SS
     public float   inThroughput;

@@ -37,8 +37,8 @@ import edu.uci.ics.jung.visualization.transform.shape.ShapeTransformer;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
 
 public class Network<V, E>
-        extends UndirectedSparseGraph<V, E>
-        implements Graph<V, E> {
+    extends UndirectedSparseGraph<V, E>
+    implements Graph<V, E> {
 
     final public double width;
     final public double height;
@@ -52,12 +52,12 @@ public class Network<V, E>
     public static int[] thetaSet = new int[1]; // Brendan added, for now just two theta kept
     public HashSet<Vertex>[][][] beamSet; // beamSet[i][k][l] = lth beam set for relay i, theta k
     public static int numChannels;
+    public Random random;
 
     public Network(double width, double height, int theta, int channels) {
         this.width = width;
         this.height = height;
         this.thetaSet[0] = theta;
-        //this.thetaSet[1] = 2 * theta;
     }
 
     /**
@@ -67,12 +67,25 @@ public class Network<V, E>
      */
     public static NetworkGenerator getGenerator(int numRelays, int numSubscribers, int sectors, double width, double height, long seed, int theta, double meanq, double slotlen, int channels) {
         NetworkGenerator gen = new NetworkGenerator(new NetworkFactory(width, height, theta, channels),
-                new VertexFactory(width, height, sectors, meanq),
-                new EdgeFactory(), numRelays, numSubscribers, width, height);
+                                                    new VertexFactory(width, height, sectors, meanq),
+                                                    new EdgeFactory(), numRelays, numSubscribers, width, height);
         gen.setSeed(seed);
         thetaSet[0] = theta;
         meanQueueLength = meanq;
         timeslotLength = slotlen;
+        numChannels = channels;
+        return (gen);
+    }
+
+    public static NetworkGenerator getGenerator(int relays, int subscribers, 
+                                                double width, double height, 
+                                                long seed, int channels) {
+        NetworkGenerator gen = new NetworkGenerator(new NetworkFactory(width, 
+                                                                       height, 
+                                                                       channels),
+                                                    new VertexFactory(width, height),
+                                                    new EdgeFactory(), relays, subscribers, width, height);
+        gen.setSeed(seed);
         numChannels = channels;
         return (gen);
     }
@@ -108,13 +121,26 @@ public class Network<V, E>
                     return Color.CYAN;
                 } else if (v.type == 2) {
                     return Color.GREEN;
+                } else if (v.type == 3) {
+                    return Color.RED;
                 } else {
                     return Color.YELLOW;
                 }
             }
         };
 
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Beam Scheduling");
+        Transformer<Edge, Paint> edgePaint = new Transformer<Edge, Paint>() {
+            public Paint transform(Edge e) {
+                if (e.type == 0) {
+                    return Color.BLACK;
+                } else {
+                    return Color.RED;
+                }
+            }
+        };
+
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", 
+                           "Wireless Mesh Network Simulation");
         JFrame jf = new JFrame(name);
         final Dimension layoutSize = new Dimension(width, height);
         final Layout layout = new StaticLayout(this, new NetworkTransformer(layoutSize, this.width, this.height), layoutSize);
@@ -125,62 +151,54 @@ public class Network<V, E>
 
         vv.addPostRenderPaintable(new VisualizationViewer.Paintable() {
 
-            public boolean useTransform() {
-                return true;
-            }
-
-            public void paint(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g;
-
-
-                // Draw the beams
-                Iterator itr = relays.iterator();
-                while (itr.hasNext()) {
-                    Vertex relay = (Vertex) itr.next();
-                    int theta = thetaSet[relay.bestK];
-                    int half_theta = theta / 2;
-
-
-                    double length = relay.calculateRange(360 / theta);
-                    double b = (relay.bestBearing * Math.PI) / 180.0;
-                    double bm = ((relay.bestBearing - half_theta) * Math.PI) / 180.0;
-                    double bp = ((relay.bestBearing + half_theta) * Math.PI) / 180.0;
-                    float old_x = (float) relay.location.getX() * scale_x;
-                    float old_y = (float) relay.location.getY() * scale_y;
-                    float u_x = ((float) relay.location.getX() + ((float) (length * Math.sin(bp)))) * scale_x;
-                    float u_y = ((float) relay.location.getY() + ((float) (length * Math.cos(bp)))) * scale_y;
-                    float l_x = ((float) relay.location.getX() + ((float) (length * Math.sin(bm)))) * scale_x;
-                    float l_y = ((float) relay.location.getY() + ((float) (length * Math.cos(bm)))) * scale_y;
-
-//                    System.out.println("Trying to draw beam for relay " + relay + " (" + old_x + "," + old_y + ")");
-//                    System.out.println("\tBeam Bearing: " + relay.bestBearing + " Range: " + length);
-//                    System.out.println("\tBeam Shape: " + old_x + "," + old_y + " " + u_x + "," + u_y + " " + l_x + "," + l_y);
-
-                    GeneralPath beamShape = new GeneralPath();
-                    beamShape.moveTo(old_x, old_y);
-                    beamShape.lineTo(u_x, u_y);
-                    beamShape.lineTo(l_x, l_y);
-                    beamShape.lineTo(old_x, old_y);
-
-                    Color old = g2.getColor();
-                    // g2.setColor(Color.BLUE);
-                    // // Center is relay.location
-                    // // radius is length
-                    // double nx = ((float)relay.location.getX()) * scale_x;
-                    // double ny = ((float)relay.location.getY()) * scale_y;
-                    // g2.drawOval((int)((relay.location.getX() - length) * scale_x), (int)((relay.location.getY() - length) * scale_y), (int)(length * scale_x), (int)(length * scale_y));
-
-                    g2.setColor(Color.RED);
-                    g2.draw(new Line2D.Double(old_x, old_y, u_x, u_y));
-                    g2.draw(new Line2D.Double(old_x, old_y, l_x, l_y));
-
-                    g2.setColor(old);
+                public boolean useTransform() {
+                    return true;
                 }
-            }
-        });
+
+                public void paint(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g;
+
+                    // Draw the beams
+                    if (relays != null) {
+                        Iterator itr = relays.iterator();
+                        while (itr.hasNext()) {
+                            Vertex relay = (Vertex) itr.next();
+                            int theta = thetaSet[relay.bestK];
+                            int half_theta = theta / 2;
+
+
+                            double length = relay.calculateRange(360 / theta);
+                            double b = (relay.bestBearing * Math.PI) / 180.0;
+                            double bm = ((relay.bestBearing - half_theta) * Math.PI) / 180.0;
+                            double bp = ((relay.bestBearing + half_theta) * Math.PI) / 180.0;
+                            float old_x = (float) relay.location.getX() * scale_x;
+                            float old_y = (float) relay.location.getY() * scale_y;
+                            float u_x = ((float) relay.location.getX() + ((float) (length * Math.sin(bp)))) * scale_x;
+                            float u_y = ((float) relay.location.getY() + ((float) (length * Math.cos(bp)))) * scale_y;
+                            float l_x = ((float) relay.location.getX() + ((float) (length * Math.sin(bm)))) * scale_x;
+                            float l_y = ((float) relay.location.getY() + ((float) (length * Math.cos(bm)))) * scale_y;
+
+                            GeneralPath beamShape = new GeneralPath();
+                            beamShape.moveTo(old_x, old_y);
+                            beamShape.lineTo(u_x, u_y);
+                            beamShape.lineTo(l_x, l_y);
+                            beamShape.lineTo(old_x, old_y);
+
+                            Color old = g2.getColor();
+
+                            g2.setColor(Color.RED);
+                            g2.draw(new Line2D.Double(old_x, old_y, u_x, u_y));
+                            g2.draw(new Line2D.Double(old_x, old_y, l_x, l_y));
+
+                            g2.setColor(old);
+                        }
+                    }
+                }
+            });
 
         vv.getRenderContext().setVertexFillPaintTransformer(vertexPaint);
         vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
+        vv.getRenderContext().setEdgeDrawPaintTransformer(edgePaint);
         vv.getRenderContext().setEdgeStrokeTransformer(edgeDraw);
         vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line());
         vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
@@ -191,6 +209,10 @@ public class Network<V, E>
         jf.pack();
         jf.setVisible(true);
 
+    }
+
+    public Vertex randomSub() {
+        return this.subList[this.random.nextInt(this.subList.length)];
     }
 
     public void calculateBeamSets() {
