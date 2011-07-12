@@ -11,6 +11,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 
 import org.apache.commons.collections15.Transformer;
+import org.apache.commons.lang.StringUtils;
 
 import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath;
 import edu.uci.ics.jung.graph.util.Pair;
@@ -73,26 +74,24 @@ public class Rcs {
             destination = network.randomRelay();
         }
 
-        System.out.println("Source: " + source);
-        System.out.println("Destination: " + destination);
+        // System.out.println("Source: " + source);
+        // System.out.println("Destination: " + destination);
         source.type = 3;
         destination.type = 4;
 
         List<Edge> dpath = dsp.getPath(source, destination);
-        double totalTP = 0.0;
         double totalLength = 0.0;
         for(Edge e: dpath) {
             Pair<Vertex> ends = network.getEndpoints(e);
             e.type = 4;
-            totalTP += e.capacity;
             totalLength += e.length;
-            System.out.println(ends.getFirst() + " -> " + ends.getSecond());
         }
 
-        System.out.println("Dijkstra: (cap) " + totalTP + " (length) " + totalLength);
+        System.out.println(dpath.toString());
+
         network.draw(1024, 768, "Routing and Channel Selection Application");
 
-        //        System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra");
-        //        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + totalTP);
+        System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim");
+        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", 0.0, 0.0");
     }
 }

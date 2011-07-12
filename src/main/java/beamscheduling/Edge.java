@@ -19,6 +19,16 @@ public class Edge {
         this.id = -1;
     }
 
+    public double bottleNeckCapacity() {
+        double sum = 0.0d;
+        for(int i = 0; i < channels.length; i++) {
+            if (channels[i] > 0.0d) {
+                sum += channels[i];
+            }
+        }
+        return (-1.0d * sum + channels.length * 45 * Math.pow(10,6));
+    }
+
     public String toString() {
         DecimalFormat dec = new DecimalFormat("##.#");
         String delim = "";
