@@ -203,7 +203,6 @@ public class Vertex implements Comparable {
 
     public double calculateThroughput(Vertex v) {
        double distance = distanceTo(v);
-       System.out.println(location + " : " + v.location + " = Distance: " + distance);
        if (distance > 20.0) {
            return 0.0;
        } else if (distance > 11.8) {

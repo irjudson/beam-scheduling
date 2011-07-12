@@ -141,6 +141,27 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             }
         }
 
+        Vector junk = new Vector();
+        for(Vertex v: network.relayList) {
+            for(E e: network.getIncidentEdges((V)v)) {
+                Boolean remove = true;
+                for(int i = 0; i < network.numChannels; i++) {
+                    if (((Edge)e).channels[i] > 0.0) {
+                        remove = false;
+                    }
+                }
+                if(remove) {
+                    junk.add(e);
+                }
+            }
+        }
+        
+        Iterator itr = junk.iterator();
+        while(itr.hasNext()) {
+            E e = (E)itr.next();
+            network.removeEdge(e);
+        }
+
         network.random = random;
         return network;
     }
