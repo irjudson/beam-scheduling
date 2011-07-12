@@ -87,14 +87,19 @@ public class Rcs {
 
         DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer);
         List<Edge> dpath = dsp.getPath(source, destination);
+        System.out.println("Dijkstra Path");
         System.out.println(dpath.toString());
         for(Edge e: dpath) { e.type = 1; }
 
         PrimMinimumSpanningTree psp = new PrimMinimumSpanningTree(networkGenerator.networkFactory, pTransformer);
         Graph primTree = psp.transform(network);
+        System.out.println("Prim Tree");
+        System.out.print(primTree.toString());
+
         DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer);
         List<Edge> ppath = dsp2.getPath(source, destination);
         for(Edge e: ppath) { e.type = 4; }
+        System.out.println("Prim Path");
         System.out.println(ppath.toString());
 
         //((Network)primTree).draw(1024, 768, "FOo");

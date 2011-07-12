@@ -95,6 +95,7 @@ public class Network<V, E>
         Transformer<Edge, Stroke> edgeDraw = new Transformer<Edge, Stroke>() {
             public Stroke transform(Edge e) {
                 float weight = (float)(e.capacity/Math.pow(10, 7));
+                //float weight = (float)(e.bottleNeckCapacity());
                 return new BasicStroke(weight, BasicStroke.CAP_BUTT, 
                                        BasicStroke.JOIN_MITER, 10.0f, 
                                        null, 0.0f);
