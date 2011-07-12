@@ -28,5 +28,5 @@ public class RcsOptions {
   
   @Option(name = "-c", aliases = {"--channels"}, metaVar = "CHANNELS",
          usage = "Specify the number of channels available for each frequency.")
-    public int channels = 1;
+    public int channels = 3;
 }
