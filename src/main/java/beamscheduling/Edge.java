@@ -1,6 +1,14 @@
 package beamscheduling;
 
+import java.text.DecimalFormat;
+
+
 public class Edge {
+    public int     id;                          
+    public double  length;
+    public double  capacity;
+    public int     type;
+
     public Edge(int id) {
         this.id = id;
     }
@@ -9,12 +17,8 @@ public class Edge {
         this.id = -1;
     }
 
-    public int     id;                          
-    public double  length;
-    public double  capacity;
-    public int     type;
-
     public String toString() {
-        return Double.toString(length);
+        DecimalFormat dec = new DecimalFormat("###");
+        return(Integer.toString(id) + " " + dec.format(length/1000) + " km\n " + Double.toString(capacity) + " kbps");
     }
 }
