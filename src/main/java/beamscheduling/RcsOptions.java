@@ -8,15 +8,15 @@ public class RcsOptions {
     // Execution stuff
   @Option(name = "-w", aliases = {"--width"}, metaVar = "WIDTH",
           usage = "Width of the simulation bounding box (m).")
-    public double width = 100000.0;
+    public double width = 50000.0;
 
   @Option(name = "-h", aliases = {"--height"}, metaVar = "HEIGHT",
           usage = "Height of the simulation bounding box (m).")
-    public double height = 100000.0;
+    public double height = 50000.0;
 
   @Option(name = "-n", aliases = {"--nodes"}, metaVar = "NODES",
           usage = "Number of nodes in the base network.")
-    public int relays = 25;
+    public int relays = 20;
 
   @Option(name = "-s", aliases = {"--seed"}, metaVar = "SEED",
           usage = "Specify the random seed, defaults to a random seed.")

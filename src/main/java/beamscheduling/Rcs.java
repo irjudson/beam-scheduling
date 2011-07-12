@@ -14,7 +14,9 @@ import org.apache.commons.collections15.Transformer;
 import org.apache.commons.lang.StringUtils;
 
 import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath;
+import edu.uci.ics.jung.algorithms.shortestpath.PrimMinimumSpanningTree;
 import edu.uci.ics.jung.graph.util.Pair;
+import edu.uci.ics.jung.graph.Graph;
 
 // for dijkstra the weights can just be the physical link distance 
 // (assuming there is at least one available channel on the link). 
@@ -66,7 +68,11 @@ public class Rcs {
             }
         };
 
-        DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer);
+        Transformer<Edge, Double>pTransformer = new Transformer<Edge, Double>() {
+            public Double transform(Edge e) {
+                return e.bottleNeckWeight();                
+            }
+        };
 
         Vertex source = network.randomRelay();
         Vertex destination = network.randomRelay();
@@ -79,18 +85,20 @@ public class Rcs {
         source.type = 3;
         destination.type = 4;
 
+        DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer);
         List<Edge> dpath = dsp.getPath(source, destination);
-        double totalLength = 0.0;
-        for(Edge e: dpath) {
-            Pair<Vertex> ends = network.getEndpoints(e);
-            e.type = 4;
-            totalLength += e.length;
-        }
-
         System.out.println(dpath.toString());
+        for(Edge e: dpath) { e.type = 1; }
 
+        PrimMinimumSpanningTree psp = new PrimMinimumSpanningTree(networkGenerator.networkFactory, pTransformer);
+        Graph primTree = psp.transform(network);
+        DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer);
+        List<Edge> ppath = dsp2.getPath(source, destination);
+        for(Edge e: ppath) { e.type = 4; }
+        System.out.println(ppath.toString());
+
+        //((Network)primTree).draw(1024, 768, "FOo");
         network.draw(1024, 768, "Routing and Channel Selection Application");
-
         System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim");
         System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", 0.0, 0.0");
     }

@@ -26,9 +26,13 @@ public class Edge {
                 sum += channels[i];
             }
         }
-        return (-1.0d * sum + channels.length * 45 * Math.pow(10,6));
+        return(sum);
     }
 
+    public double bottleNeckWeight() {
+        double max = channels.length * 45 * Math.pow(10,6);
+        return (max - bottleNeckCapacity());
+    }
     public String toString() {
         DecimalFormat dec = new DecimalFormat("##.#");
         String delim = "";

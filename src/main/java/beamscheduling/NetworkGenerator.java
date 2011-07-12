@@ -61,7 +61,7 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             Vertex v = (Vertex)node;
             v.type = 2;
             // Mark this vertex as a client.
-            network.addVertex(node);
+            //network.addVertex(node);
             network.subscribers.add(v);
             network.subList[i] = v;
         }
@@ -160,6 +160,18 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
         while(itr.hasNext()) {
             E e = (E)itr.next();
             network.removeEdge(e);
+        }
+
+        for(Vertex v: network.relayList) {
+            if (network.degree((V)v) == 0) {
+                junk.add(v);
+            }
+        }
+
+        itr = junk.iterator();
+        while(itr.hasNext()) {
+            V v = (V)itr.next();
+            network.removeVertex(v);
         }
 
         network.random = random;
