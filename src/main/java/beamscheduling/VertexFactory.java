@@ -26,7 +26,7 @@ class VertexFactory implements Factory<Vertex> {
         {
             this.width = width;
             this.height = height;
-            this.sectors = 0;
+            this.sectors = 1;
             this.meanQueueLength = 0;
             generator = new Random();
         }

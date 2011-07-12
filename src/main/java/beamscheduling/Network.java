@@ -158,54 +158,7 @@ public class Network<V, E>
 
         final float scale_x = (float) ((layoutSize.getWidth() * 0.95) / this.width);
         final float scale_y = (float) ((layoutSize.getHeight() * 0.95) / this.height);
-
-        vv.addPostRenderPaintable(new VisualizationViewer.Paintable() {
-
-                public boolean useTransform() {
-                    return true;
-                }
-
-                public void paint(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-
-                    // Draw the beams
-                    if (relays != null) {
-                        Iterator itr = relays.iterator();
-                        while (itr.hasNext()) {
-                            Vertex relay = (Vertex) itr.next();
-                            int theta = thetaSet[relay.bestK];
-                            int half_theta = theta / 2;
-
-
-                            double length = relay.calculateRange(360 / theta);
-                            double b = (relay.bestBearing * Math.PI) / 180.0;
-                            double bm = ((relay.bestBearing - half_theta) * Math.PI) / 180.0;
-                            double bp = ((relay.bestBearing + half_theta) * Math.PI) / 180.0;
-                            float old_x = (float) relay.location.getX() * scale_x;
-                            float old_y = (float) relay.location.getY() * scale_y;
-                            float u_x = ((float) relay.location.getX() + ((float) (length * Math.sin(bp)))) * scale_x;
-                            float u_y = ((float) relay.location.getY() + ((float) (length * Math.cos(bp)))) * scale_y;
-                            float l_x = ((float) relay.location.getX() + ((float) (length * Math.sin(bm)))) * scale_x;
-                            float l_y = ((float) relay.location.getY() + ((float) (length * Math.cos(bm)))) * scale_y;
-
-                            GeneralPath beamShape = new GeneralPath();
-                            beamShape.moveTo(old_x, old_y);
-                            beamShape.lineTo(u_x, u_y);
-                            beamShape.lineTo(l_x, l_y);
-                            beamShape.lineTo(old_x, old_y);
-
-                            Color old = g2.getColor();
-
-                            g2.setColor(Color.RED);
-                            g2.draw(new Line2D.Double(old_x, old_y, u_x, u_y));
-                            g2.draw(new Line2D.Double(old_x, old_y, l_x, l_y));
-
-                            g2.setColor(old);
-                        }
-                    }
-                }
-            });
-
+    
         vv.getRenderContext().setVertexFillPaintTransformer(vertexPaint);
         vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
         vv.getRenderContext().setEdgeDrawPaintTransformer(edgePaint);

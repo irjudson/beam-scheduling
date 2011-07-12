@@ -15,6 +15,14 @@ import org.apache.commons.collections15.Transformer;
 import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath;
 import edu.uci.ics.jung.graph.util.Pair;
 
+// for dijkstra the weights can just be the physical link distance 
+// (assuming there is at least one available channel on the link). 
+// basically we should assign random channels to each link, 
+// then place primary users (removing some channels), any link 
+// that still has >= 1 channel survives, then we run routing algorithms 
+// to get paths, then channel selection on each path to determine the 
+// end-to-end quality
+
 public class Rcs {
 
     static Logger logger = Logger.getLogger("RoutingChannelSelection");

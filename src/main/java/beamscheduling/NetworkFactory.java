@@ -22,7 +22,7 @@ class NetworkFactory implements Factory<Network> {
             this.width = width;
             this.height = height;
             this.channels = channels;
-            this.theta = 1;
+            this.theta = 360;
         }
 
     public Network create() {

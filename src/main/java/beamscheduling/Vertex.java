@@ -24,7 +24,7 @@ public class Vertex implements Comparable {
     public int     allocatedChannels;
     public double  queueLength;
     private double gainReceiver = Math.pow(10, 2.0 / 10);       // 2 dB
-    private double frequency = 5.8 * Math.pow(10, 9);           // 5.8 Ghz
+    private double frequency = 2.4 * Math.pow(10, 9);           // 2.4 Ghz
     private double c = 3.0 * Math.pow(10, 8);                   // Speed of light
     private double lambda = c / frequency;
 
@@ -126,18 +126,12 @@ public class Vertex implements Comparable {
             int sectorUsed = findSector(v);
             double dist = this.location.distance(v.location);
             double range = calculateRange(this.activeSectors);
-            // System.out.println("Sector: " + sectorUsed);
-            // System.out.println("Range("+this.activeSectors+"): " 
-            //                    + calculateRange(this.activeSectors));
-            // System.out.println("Distance: " + this.location.distance(v.location));
             if (dist < range) {
                 sector = findSector(v);
                 HashSet<Vertex> nodeSet = (HashSet<Vertex>)this.sectorMap.get(sector);
                 nodeSet.add(v);
-                // System.out.println("Added neighbor: " + this + "<->" + v ); // 
                 this.sectorMap.put(sector, nodeSet);
             } else {
-                // System.out.println("Removing neighbor: " + this + "<->" + v);
                 toBeRemoved.add((Edge)g.findEdge(this, v));
             }
         }
@@ -200,6 +194,25 @@ public class Vertex implements Comparable {
        return weight;
    }
 
+    public double calculateThroughput(Vertex v) {
+       double distance = location.distance(v.location);
+       distance /= 1000;
+       System.out.println(location + " : " + v.location + " = Distance: " + distance);
+       if (distance > 20000.0) {
+           return 0.0;
+       } else if (distance > 11800.0) {
+           return 10 * Math.pow(10, 6);
+       } else if (distance > 8600.0) {
+           return 20 * Math.pow(10, 6);
+       } else if (distance > 5300.0) {
+           return 30 * Math.pow(10, 6);
+       } else if (distance > 4500.0) {
+           return 40 * Math.pow(10, 6);
+       } else {
+           return 45 * Math.pow(10, 6);
+       }
+    }
+
    /**
      *
      * @param covered is the width of the beam
@@ -208,7 +221,8 @@ public class Vertex implements Comparable {
      */
    public double calculateThroughput(int covered, Vertex v){
        double distance = location.distance(v.location);
-       double gainTransmitter = Math.pow(10, (2 + 10 * Math.log10(360.0 / covered)) / 10.0);
+       //       double gainTransmitter = Math.pow(10, (2 + 10 * Math.log10(360.0 / covered)) / 10.0);
+       double gainTransmitter = gainReceiver;
        double pathLoss = gainReceiver * gainTransmitter * Math.pow(lambda, 2);
        pathLoss /= Math.pow(4 * Math.PI * distance, 2);
        // in dB
@@ -229,6 +243,8 @@ public class Vertex implements Comparable {
            weight = 40 * Math.pow(10, 6);  // 40 Mb/s
        else
            weight = 45 * Math.pow(10, 6);  // 45 Mb/s
+
+       System.out.println("Distance: " + distance + " TP: " + weight);
 
        return weight;
    }
