@@ -104,10 +104,12 @@ public class Network<V, E>
                     return new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
                 } else if (e.type == 3) {
                     float dash[] = {15.0f};
-                    return new BasicStroke(1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
-                } else {
+                    return new BasicStroke(4.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
+                } else if (e.type == 4) {
                     float dash[] = {20.0f};
-                    return new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
+                    return new BasicStroke(5.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
+                } else {
+                    return new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
                 }
             }
         };
@@ -135,10 +137,14 @@ public class Network<V, E>
             public Paint transform(Edge e) {
                 if (e.type == 0) {
                     return Color.BLACK;
-                } else if (e.type == 3) {
-                    return Color.BLUE;
-                } else {
+                } else if (e.type == 1) {
+                    return Color.CYAN;
+                } else if (e.type == 2) {
+                    return Color.GREEN;
+                } else if (e.type == 4) {
                     return Color.RED;
+                } else {
+                    return Color.BLACK;
                 }
             }
         };

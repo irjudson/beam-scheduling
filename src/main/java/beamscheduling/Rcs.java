@@ -75,7 +75,7 @@ public class Rcs {
         double totalLength = 0.0;
         for(Edge e: dpath) {
             Pair<Vertex> ends = network.getEndpoints(e);
-            e.type = 1;
+            e.type = 4;
             totalTP += e.capacity;
             totalLength += e.length;
             System.out.println(ends.getFirst() + " -> " + ends.getSecond());

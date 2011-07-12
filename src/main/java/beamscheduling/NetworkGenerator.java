@@ -69,12 +69,14 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
         for(Vertex v1: network.relayList) {
             for(Vertex v2: network.relayList) {
                 if (v1 != v2 && network.findEdge((V)v1, (V)v2) == null) {
-                    double dist = Point.roundTwoDecimals(v1.location.distance(v2.location));
-                    // Check for connectivity & throughput
-                    E edge = edgeFactory.create();
-                    ((Edge)edge).length = dist;
-                    ((Edge)edge).capacity = v1.calculateThroughput(1, v2);
-                    network.addEdge(edge, (V)v1, (V)v2);
+                    double tp = v1.calculateThroughput(1, v2);
+                    if (tp > 0.0) {
+                        double dist = Point.roundTwoDecimals(v1.location.distance(v2.location));
+                        E edge = edgeFactory.create();
+                        ((Edge)edge).length = dist;
+                        ((Edge)edge).capacity = tp;
+                        network.addEdge(edge, (V)v1, (V)v2);
+                    }
                 }
             }
         }
@@ -93,7 +95,7 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             }
 
             E edge = edgeFactory.create();
-            ((Edge)edge).type = 3;
+            ((Edge)edge).type = 2;
             ((Edge)edge).length = dist;
             ((Edge)edge).capacity = tp;
             network.addEdge(edge, (V)v1, (V)best);

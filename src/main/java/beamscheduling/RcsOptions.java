@@ -8,11 +8,11 @@ public class RcsOptions {
     // Execution stuff
   @Option(name = "-w", aliases = {"--width"}, metaVar = "WIDTH",
           usage = "Width of the simulation bounding box (m).")
-    public double width = 1000000.0;
+    public double width = 700000.0;
 
   @Option(name = "-h", aliases = {"--height"}, metaVar = "HEIGHT",
           usage = "Height of the simulation bounding box (m).")
-    public double height = 1000000.0;
+    public double height = 700000.0;
 
   @Option(name = "-n", aliases = {"--nodes"}, metaVar = "NODES",
           usage = "Number of nodes in the base network.")
