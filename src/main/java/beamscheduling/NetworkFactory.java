@@ -4,10 +4,10 @@ import org.apache.commons.collections15.Factory;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 
 class NetworkFactory implements Factory<Network> {
-    double width;
-    double height;
-    int theta;
-    int channels;
+    public double width;
+    public double height;
+    public int theta;
+    public int channels;
 
     public NetworkFactory(double width, double height, int theta, int channels)
         {

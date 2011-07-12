@@ -72,35 +72,73 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
                     double tp = v1.calculateThroughput(v2);
                     if (tp > 0.0) {
                         double dist = Point.roundTwoDecimals(v1.distanceTo(v2));
-                        E edge = edgeFactory.create();
-                        ((Edge)edge).capacity = tp;
-                        ((Edge)edge).length = dist;
-                        network.addEdge(edge, (V)v1, (V)v2);
+                        E e = edgeFactory.create();
+                        Edge edge = (Edge)e;
+                        edge.capacity = tp;
+                        edge.length = dist;
+                        edge.channels = new Double[network.numChannels * 3];
+                        // -1 means never initialized for use
+                        // 0 means zero'd for interference
+                        // > 0 means active (1) or effective throughput
+                        for(int i = 0; i < network.numChannels * 3; i++ ) {
+                            edge.channels[i] = -1.0d;
+                        }
+
+                        // Randomly assign k channels from 3*k choices
+                        int n = 0;
+                        while(n < network.numChannels) {
+                            int nextIdx = random.nextInt(network.numChannels*3);
+                            if (edge.channels[nextIdx] == -1.0d) {
+                                edge.channels[nextIdx] = 1.0d;
+                                n += 1;
+                            }
+                        }
+
+                        // Calculate throughput for each active channel
+                        int freq = -1;
+                        for (int i = 0; i < network.numChannels*3; i++) {
+                            if(i % network.numChannels == 0) {
+                                if (freq == -1) {
+                                    freq = 700;
+                                } else if (freq == 700) {
+                                    freq = 2400;
+                                } else if (freq == 2400) {
+                                    freq = 5800;
+                                }
+                            }
+
+                            if (edge.channels[i] == 1.0f) {
+                                edge.channels[i] = edge.lookupThroughput(freq);
+                            }
+                        }
+
+                        network.addEdge(e, (V)v1, (V)v2);
                     }
                 }
             }
         }
 
+        // Calculate interference and zero out channels
         for(Vertex v1: network.subList) {
-            double dist = 100000000.0;
-            double tp = 0.0;
-            Vertex best = null;
-            for(Vertex v2: network.relayList) {
-                if (v1 != v2 && network.findEdge((V)v1, (V)v2) == null) {
-                    double d = Point.roundTwoDecimals(v1.distanceTo(v2));
-                    if (d < dist) {
-                        dist = d;
-                        tp = v1.calculateThroughput(v1);
-                        best = v2;
+            v1.interferenceChannel = random.nextInt(network.numChannels*3);
+            double range = 0.0d;
+            if (v1.interferenceChannel > 0 
+                && v1.interferenceChannel < network.numChannels) {
+                range = 30.8;
+            } else if (v1.interferenceChannel > 0 + network.numChannels &&
+                       v1.interferenceChannel < 2 * network.numChannels) {
+                range = 9.0;
+            } else if (v1.interferenceChannel > 0 + 2 * network.numChannels &&
+                       v1.interferenceChannel < 3 * network.numChannels) {
+                range = 3.6;
+            }
+            for (Vertex v2: network.relayList) {
+                if (v1.distanceTo(v1) < range) {
+                    for(E e: network.getIncidentEdges((V)v2)) {
+                        ((Edge)e).channels[v1.interferenceChannel] = 0.0d;
                     }
                 }
             }
-
-            E edge = edgeFactory.create();
-            ((Edge)edge).type = 2;
-            ((Edge)edge).capacity = tp;
-            ((Edge)edge).length = dist;
-            network.addEdge(edge, (V)v1, (V)best);
         }
 
         network.random = random;

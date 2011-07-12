@@ -57,6 +57,7 @@ public class Network<V, E>
     public Network(double width, double height, int theta, int channels) {
         this.width = width;
         this.height = height;
+        this.numChannels = channels;
         this.thetaSet[0] = theta;
     }
 

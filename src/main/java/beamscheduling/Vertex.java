@@ -27,6 +27,7 @@ public class Vertex implements Comparable {
     private double frequency = 2.4 * Math.pow(10, 9);           // 2.4 Ghz
     private double c = 3.0 * Math.pow(10, 8);                   // Speed of light
     private double lambda = c / frequency;
+    public Integer interferenceChannel;
 
     public int compareTo(Object otherVertex) throws ClassCastException {
         if(!(otherVertex instanceof Vertex))
