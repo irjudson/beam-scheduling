@@ -92,28 +92,14 @@ public class Network<V, E>
 
     void draw(int width, int height, String name) {
         Transformer<Edge, Stroke> edgeDraw = new Transformer<Edge, Stroke>() {
-
             public Stroke transform(Edge e) {
-                if (e.type == 0) {
-                    return new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
-                } else if (e.type == 1) {
-                    float dash[] = {5.0f};
-                    return new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
-                } else if (e.type == 2) {
-                    float dash[] = {10.0f};
-                    return new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
-                } else if (e.type == 3) {
-                    float dash[] = {15.0f};
-                    return new BasicStroke(4.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
-                } else if (e.type == 4) {
-                    float dash[] = {20.0f};
-                    return new BasicStroke(5.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
-                } else {
-                    return new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
-                }
+                float weight = (float)(e.capacity/Math.pow(10, 7));
+                float dash[] = { weight };
+                return new BasicStroke(weight, BasicStroke.CAP_BUTT, 
+                                       BasicStroke.JOIN_MITER, 10.0f, 
+                                       dash, 0.0f);
             }
         };
-
         Transformer<Vertex, Paint> vertexPaint = new Transformer<Vertex, Paint>() {
 
             public Paint transform(Vertex v) {

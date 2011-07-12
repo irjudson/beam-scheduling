@@ -194,19 +194,24 @@ public class Vertex implements Comparable {
        return weight;
    }
 
+    public double distanceTo(Vertex v) {
+        double distance = Math.pow(this.location.getX()/1000.0 - v.location.getX()/1000.0, 2);
+        distance += Math.pow(this.location.getY()/1000.0 - v.location.getY()/1000.0, 2);
+        return Point.roundTwoDecimals(Math.sqrt(distance));
+    }
+
     public double calculateThroughput(Vertex v) {
-       double distance = location.distance(v.location);
-       distance /= 1000;
+       double distance = distanceTo(v);
        System.out.println(location + " : " + v.location + " = Distance: " + distance);
-       if (distance > 20000.0) {
+       if (distance > 20.0) {
            return 0.0;
-       } else if (distance > 11800.0) {
+       } else if (distance > 11.8) {
            return 10 * Math.pow(10, 6);
-       } else if (distance > 8600.0) {
+       } else if (distance > 8.6) {
            return 20 * Math.pow(10, 6);
-       } else if (distance > 5300.0) {
+       } else if (distance > 5.3) {
            return 30 * Math.pow(10, 6);
-       } else if (distance > 4500.0) {
+       } else if (distance > 4.5) {
            return 40 * Math.pow(10, 6);
        } else {
            return 45 * Math.pow(10, 6);

@@ -19,6 +19,6 @@ public class Edge {
 
     public String toString() {
         DecimalFormat dec = new DecimalFormat("##.#");
-        return(Integer.toString(id) + " " + dec.format(length) + " km\n " + Double.toString(capacity) + " kbps");
+        return("[" + Integer.toString(id) + "] " + dec.format(length) + " km\n " + Double.toString(capacity) + " kbps");
     }
 }
