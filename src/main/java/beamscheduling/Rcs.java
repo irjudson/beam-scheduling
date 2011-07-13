@@ -129,8 +129,8 @@ public class Rcs {
 
         PrimMinimumSpanningTree psp = new PrimMinimumSpanningTree(networkGenerator.networkFactory, pTransformer);
         Graph primTree = psp.transform(network);
-        System.out.println("Prim Tree");
-        System.out.println(primTree.toString());
+        //System.out.println("Prim Tree");
+        //System.out.println(primTree.toString());
         for(Object e: primTree.getEdges()) { ((Edge)e).type = 2; }
 
         // Clear out markings
@@ -143,10 +143,10 @@ public class Rcs {
         List<Edge> p = dsp2.getPath(source, destination);
 
         for(Edge e: p) { 
-            Pair<Edge> ends = primTree.getEndpoints(e);
-            System.out.println("Painting Edge Red: " + e 
-                               + "["+ends.getFirst()+","+ends.getSecond()+"]");
             e.type = 4; 
+            //Pair<Edge> ends = primTree.getEndpoints(e);
+            //System.out.println("Painting Edge Red: " + e 
+            //                 + "["+ends.getFirst()+","+ends.getSecond()+"]");
         }
         System.out.println("Prim Path");
         System.out.println(p.toString());
