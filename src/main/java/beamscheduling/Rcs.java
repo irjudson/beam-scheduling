@@ -30,6 +30,42 @@ public class Rcs {
 
     static Logger logger = Logger.getLogger("RoutingChannelSelection");
 
+    public static int dfsPath(Graph network, Vertex source,
+                                     Vertex destination, String prefix, 
+                                     List<Edge> path) {
+        //System.out.println(prefix + source);
+
+        for(Object o: network.getNeighbors(source)) {
+            Vertex v = (Vertex)o;
+            Edge e = (Edge)network.findEdge(source, v);
+            
+            if (e == null) { return(0); }
+
+            if (path.size() > 0) {
+                return(1);
+            }
+
+            // Found the destination, add it to the result triggering
+            // return path collection
+            if(v == destination) {
+                System.out.println("-Adding e: " + e);
+                path.add(e);
+                //System.out.println(prefix+"+"+destination);
+                return(1);
+            } else if (! e.isMarked) {
+                e.isMarked = true;
+                dfsPath(network, v, destination, prefix+"|", path);
+                // On the way back out
+                if (path.size() > 0) {
+                    System.out.println("+Adding e: " + e);
+                    path.add(e);
+                    return(1);
+                }
+            }
+        }
+        return(1);
+    }
+
     public static void main(String[] args) {
         HashMap subscribers;
         NetworkGenerator networkGenerator;
@@ -85,7 +121,7 @@ public class Rcs {
         source.type = 3;
         destination.type = 4;
 
-        DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer);
+        DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer, false);
         List<Edge> dpath = dsp.getPath(source, destination);
         System.out.println("Dijkstra Path");
         System.out.println(dpath.toString());
@@ -94,15 +130,27 @@ public class Rcs {
         PrimMinimumSpanningTree psp = new PrimMinimumSpanningTree(networkGenerator.networkFactory, pTransformer);
         Graph primTree = psp.transform(network);
         System.out.println("Prim Tree");
-        System.out.print(primTree.toString());
+        System.out.println(primTree.toString());
+        for(Object e: primTree.getEdges()) { ((Edge)e).type = 2; }
 
-        DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer);
-        List<Edge> ppath = dsp2.getPath(source, destination);
-        for(Edge e: ppath) { e.type = 4; }
+        // Clear out markings
+        for(Object v: primTree.getVertices()) { ((Vertex)v).isMarked = false; }
+        for(Object e: primTree.getEdges()) {    ((Edge)e).isMarked = false; }
+
+        //List<Edge> p = new ArrayList<Edge>();
+        //dfsPath(primTree, source, destination, "", p);
+        DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
+        List<Edge> p = dsp2.getPath(source, destination);
+
+        for(Edge e: p) { 
+            Pair<Edge> ends = primTree.getEndpoints(e);
+            System.out.println("Painting Edge Red: " + e 
+                               + "["+ends.getFirst()+","+ends.getSecond()+"]");
+            e.type = 4; 
+        }
         System.out.println("Prim Path");
-        System.out.println(ppath.toString());
+        System.out.println(p.toString());
 
-        //((Network)primTree).draw(1024, 768, "FOo");
         network.draw(1024, 768, "Routing and Channel Selection Application");
         System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim");
         System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", 0.0, 0.0");

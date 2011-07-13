@@ -10,6 +10,7 @@ public class Edge {
     public double  capacity;
     public int     type;
     public Double[] channels;
+    public Boolean isMarked = false;
 
     public Edge(int id) {
         this.id = id;

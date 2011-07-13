@@ -28,6 +28,7 @@ public class Vertex implements Comparable {
     private double c = 3.0 * Math.pow(10, 8);                   // Speed of light
     private double lambda = c / frequency;
     public Integer interferenceChannel;
+    public Boolean isMarked = false;
 
     public int compareTo(Object otherVertex) throws ClassCastException {
         if(!(otherVertex instanceof Vertex))
