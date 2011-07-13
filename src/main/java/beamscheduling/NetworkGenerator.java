@@ -7,6 +7,7 @@ import org.apache.commons.collections15.Factory;
 
 import edu.uci.ics.jung.algorithms.generators.GraphGenerator;
 import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.util.Pair;
 
 public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
     public int numRelays;
@@ -45,7 +46,6 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
         network = this.networkFactory.create();
         network.relays = new HashSet(numRelays);
         network.subscribers = new HashSet(numSubscribers);
-
         network.relayList = new Vertex[numRelays];
         for(int i=0; i<numRelays; i++) {
             V node = vertexFactory.create();
@@ -60,8 +60,6 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             V node = vertexFactory.create();
             Vertex v = (Vertex)node;
             v.type = 2;
-            // Mark this vertex as a client.
-            //network.addVertex(node);
             network.subscribers.add(v);
             network.subList[i] = v;
         }
@@ -141,6 +139,9 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             }
         }
 
+        network.interferes = new Boolean[network.getEdgeCount()][network.getEdgeCount()][network.numChannels*3];
+
+
         Vector junk = new Vector();
         for(Vertex v: network.relayList) {
             for(E e: network.getIncidentEdges((V)v)) {
@@ -162,6 +163,8 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             network.removeEdge(e);
         }
 
+        // Calculate interference 
+        // Remove unconnected nodes -- ick
         for(Vertex v: network.relayList) {
             if (network.degree((V)v) == 0) {
                 junk.add(v);
@@ -172,6 +175,45 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
         while(itr.hasNext()) {
             V v = (V)itr.next();
             network.removeVertex(v);
+        }
+
+        //Build interference table
+        for(E e1a: network.getEdges()) {
+            for(E e2a: network.getEdges()) {
+                Edge e1 = (Edge)e1a;
+                Edge e2 = (Edge)e2a;
+                if(e1 != e2) {
+                    Pair<V> v1a = network.getEndpoints(e1a);
+                    Pair<V> v2a = network.getEndpoints(e2a);
+                    Vertex v1f = (Vertex)v1a.getFirst();
+                    Vertex v1s = (Vertex)v1a.getSecond();
+                    Vertex v2f = (Vertex)v2a.getFirst();
+                    Vertex v2s = (Vertex)v2a.getSecond();
+                    double dist = v1f.distanceTo(v2f);
+                    double d2 = v1f.distanceTo(v2s);
+                    double d3 = v1s.distanceTo(v2f);
+                    double d4 = v1s.distanceTo(v2s);
+                    dist = (dist < d2) ? dist : d2;
+                    dist = (dist < d3) ? dist : d3;
+                    dist = (dist < d4) ? dist : d4;
+                    for(int i = 0; i < network.numChannels*3; i++) {
+                        double range = 0.0d;
+                        if(i > 0 && i < network.numChannels) {
+                            range = 30.8;
+                        } else if (i > 0 + network.numChannels && 
+                                   i < 2 * network.numChannels) {
+                            range = 9.0;
+                        } else if (i > 0 + 2 * network.numChannels &&
+                                   i < 3 * network.numChannels) {
+                            range = 3.6;
+                        }
+                        if (dist < range) {
+                            network.interferes[e1.id-1][e2.id-1][i] = true;
+                            network.interferes[e2.id-1][e1.id-1][i] = true;
+                        }
+                    }
+                }
+            }
         }
 
         network.random = random;
