@@ -154,5 +154,6 @@ public class Rcs {
         network.draw(1024, 768, "Routing and Channel Selection Application");
         System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim");
         System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", 0.0, 0.0");
+        network.jf.repaint();
     }
 }

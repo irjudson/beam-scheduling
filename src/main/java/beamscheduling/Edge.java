@@ -14,10 +14,12 @@ public class Edge {
 
     public Edge(int id) {
         this.id = id;
+        this.type = 0;
     }
         
     public Edge() {
         this.id = -1;
+        this.type = 0;
     }
 
     public double bottleNeckCapacity() {

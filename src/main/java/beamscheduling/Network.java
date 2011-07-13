@@ -53,6 +53,7 @@ public class Network<V, E>
     public HashSet<Vertex>[][][] beamSet; // beamSet[i][k][l] = lth beam set for relay i, theta k
     public static int numChannels;
     public Random random;
+    public JFrame jf;
 
     public Network(double width, double height, int theta, int channels) {
         this.width = width;
@@ -95,7 +96,6 @@ public class Network<V, E>
         Transformer<Edge, Stroke> edgeDraw = new Transformer<Edge, Stroke>() {
             public Stroke transform(Edge e) {
                 float weight = (float)(e.capacity/Math.pow(10, 7));
-                //float weight = (float)(e.bottleNeckCapacity());
                 return new BasicStroke(weight, BasicStroke.CAP_BUTT, 
                                        BasicStroke.JOIN_MITER, 10.0f, 
                                        null, 0.0f);
@@ -138,7 +138,7 @@ public class Network<V, E>
 
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", 
                            "Wireless Mesh Network Simulation");
-        JFrame jf = new JFrame(name);
+        jf = new JFrame(name);
         final Dimension layoutSize = new Dimension(width, height);
         final Layout layout = new StaticLayout(this, new NetworkTransformer(layoutSize, this.width, this.height), layoutSize);
         final VisualizationViewer vv = new VisualizationViewer(layout, layoutSize);
@@ -148,17 +148,16 @@ public class Network<V, E>
     
         vv.getRenderContext().setVertexFillPaintTransformer(vertexPaint);
         vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
-        vv.getRenderContext().setEdgeDrawPaintTransformer(edgePaint);
         vv.getRenderContext().setEdgeStrokeTransformer(edgeDraw);
-        vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line());
+        //        vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line());
         vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
+        vv.getRenderContext().setEdgeDrawPaintTransformer(edgePaint);
         vv.getRenderer().getVertexLabelRenderer().setPosition(Position.CNTR);
 
         jf.getContentPane().add(vv);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.pack();
         jf.setVisible(true);
-
     }
 
     public Vertex randomSub() {
