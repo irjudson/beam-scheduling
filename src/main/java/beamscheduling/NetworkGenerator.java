@@ -208,8 +208,8 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
                             range = 3.6;
                         }
                         if (dist < range) {
-                            network.interferes[e1.id-1][e2.id-1][i] = true;
-                            network.interferes[e2.id-1][e1.id-1][i] = true;
+                            network.interferes[e1.id][e2.id][i] = true;
+                            network.interferes[e2.id][e1.id][i] = true;
                         }
                     }
                 }
