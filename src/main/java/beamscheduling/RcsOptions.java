@@ -32,7 +32,7 @@ public class RcsOptions {
 
   @Option(name = "-d", aliases = {"--display"}, metaVar = "DISPLAY",
           usage = "Draw the graphs in a window.")
-    public Boolean display = true;
+    public Boolean display = false;
 
   @Option(name = "-v", aliases = {"--verbose"}, metaVar = "VERBOSE",
           usage = "print lots of information.")

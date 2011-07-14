@@ -122,6 +122,11 @@ public class Rcs {
         source.type = 3;
         destination.type = 4;
 
+        if (options.verbose) {
+            System.out.println("Source: " + source 
+                               + " Destination: " + destination);
+        }
+
         // Find dmax and dmin
         double dmin = Double.MAX_VALUE, dmax = Double.MIN_VALUE;
         for(Object e1: network.getEdges()){
@@ -207,6 +212,7 @@ public class Rcs {
 
         System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim");
         System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + dijkstraThpt + ", " + primThpt);
-        network.jf.repaint();
+
+        if(options.display) { network.jf.repaint(); }
     }
 }
