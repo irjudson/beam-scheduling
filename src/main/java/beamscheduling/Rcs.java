@@ -119,8 +119,6 @@ public class Rcs {
             destination = network.randomRelay();
         }
 
-        // System.out.println("Source: " + source);
-        // System.out.println("Destination: " + destination);
         source.type = 3;
         destination.type = 4;
 
@@ -135,11 +133,12 @@ public class Rcs {
         ChannelSelection cs = new ChannelSelection(network);
         double dijkstraThpt = cs.selectChannels(dpath);
 
-
         PrimMinimumSpanningTree psp = new PrimMinimumSpanningTree(networkGenerator.networkFactory, pTransformer);
         Graph primTree = psp.transform(network);
-        //System.out.println("Prim Tree");
-        //System.out.println(primTree.toString());
+        if (options.verbose) {
+            System.out.println("Prim Tree");
+            System.out.println(primTree.toString());
+        }
         for (Object e : primTree.getEdges()) {
             ((Edge) e).type = 2;
         }
@@ -152,24 +151,32 @@ public class Rcs {
             ((Edge) e).isMarked = false;
         }
 
+        // Internal implementation - Not Used IRJ - 2011
         //List<Edge> p = new ArrayList<Edge>();
         //dfsPath(primTree, source, destination, "", p);
-        DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
+ 
+       DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
         List<Edge> p = dsp2.getPath(source, destination);
 
         for (Edge e : p) {
             e.type = 4;
-            //Pair<Edge> ends = primTree.getEndpoints(e);
-            //System.out.println("Painting Edge Red: " + e 
-            //                 + "["+ends.getFirst()+","+ends.getSecond()+"]");
+            if (options.verbose) {
+                Pair<Edge> ends = primTree.getEndpoints(e);
+                System.out.println("Painting Edge Red: " + e 
+                                   + "[" + ends.getFirst() + ","
+                                   + ends.getSecond() + "]");
+            }
         }
         System.out.println("Prim Path");
         System.out.println(p.toString());
 
-
         double primThpt = cs.selectChannels(p);
 
-        network.draw(1024, 768, "Routing and Channel Selection Application");
+        if(options.display) {
+            network.draw(1024, 768, 
+                         "Routing and Channel Selection Application");
+        }
+
         System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim");
         System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + dijkstraThpt + ", " + primThpt);
         network.jf.repaint();

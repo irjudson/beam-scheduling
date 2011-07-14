@@ -29,4 +29,12 @@ public class RcsOptions {
   @Option(name = "-c", aliases = {"--channels"}, metaVar = "CHANNELS",
          usage = "Specify the number of channels available for each frequency.")
     public int channels = 3;
+
+  @Option(name = "-d", aliases = {"--display"}, metaVar = "DISPLAY",
+          usage = "Draw the graphs in a window.")
+    public Boolean display = true;
+
+  @Option(name = "-v", aliases = {"--verbose"}, metaVar = "VERBOSE",
+          usage = "print lots of information.")
+    public Boolean verbose = false;
 }
