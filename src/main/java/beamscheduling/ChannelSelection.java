@@ -62,7 +62,7 @@ public class ChannelSelection {
         }
         // right side:
         TreeSet<LinkChannel> rightSide = new TreeSet();
-        for (int j = i + 1; j < pathLen; j++) {
+        for (int j = i; j < pathLen; j++) {
             rightSide.addAll(availPairs[j]);
         }
 
