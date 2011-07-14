@@ -54,7 +54,7 @@ public class Network<V, E>
     public static int numChannels;
     public Random random;
     public JFrame jf;
-    public Boolean[][][] interferes;
+    public boolean[][][] interferes;
 
     public Network(double width, double height, int theta, int channels) {
         this.width = width;

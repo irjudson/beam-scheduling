@@ -139,7 +139,7 @@ public class NetworkGenerator<V,E> implements GraphGenerator<V,E> {
             }
         }
 
-        network.interferes = new Boolean[network.getEdgeCount()+1][network.getEdgeCount()+1][network.numChannels*3+1];
+        network.interferes = new boolean[network.getEdgeCount()+1][network.getEdgeCount()+1][network.numChannels*3+1];
 
 
         Vector junk = new Vector();

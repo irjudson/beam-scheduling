@@ -25,45 +25,46 @@ import edu.uci.ics.jung.graph.Graph;
 // that still has >= 1 channel survives, then we run routing algorithms 
 // to get paths, then channel selection on each path to determine the 
 // end-to-end quality
-
 public class Rcs {
 
     static Logger logger = Logger.getLogger("RoutingChannelSelection");
 
     public static int dfsPath(Graph network, Vertex source,
-                                     Vertex destination, String prefix, 
-                                     List<Edge> path) {
+            Vertex destination, String prefix,
+            List<Edge> path) {
         //System.out.println(prefix + source);
 
-        for(Object o: network.getNeighbors(source)) {
-            Vertex v = (Vertex)o;
-            Edge e = (Edge)network.findEdge(source, v);
-            
-            if (e == null) { return(0); }
+        for (Object o : network.getNeighbors(source)) {
+            Vertex v = (Vertex) o;
+            Edge e = (Edge) network.findEdge(source, v);
+
+            if (e == null) {
+                return (0);
+            }
 
             if (path.size() > 0) {
-                return(1);
+                return (1);
             }
 
             // Found the destination, add it to the result triggering
             // return path collection
-            if(v == destination) {
+            if (v == destination) {
                 System.out.println("-Adding e: " + e);
                 path.add(e);
                 //System.out.println(prefix+"+"+destination);
-                return(1);
-            } else if (! e.isMarked) {
+                return (1);
+            } else if (!e.isMarked) {
                 e.isMarked = true;
-                dfsPath(network, v, destination, prefix+"|", path);
+                dfsPath(network, v, destination, prefix + "|", path);
                 // On the way back out
                 if (path.size() > 0) {
                     System.out.println("+Adding e: " + e);
                     path.add(e);
-                    return(1);
+                    return (1);
                 }
             }
         }
-        return(1);
+        return (1);
     }
 
     public static void main(String[] args) {
@@ -88,13 +89,14 @@ public class Rcs {
 
         // Handle options that matter
         System.out.println("Random Seed: " + options.seed);
-        networkGenerator = Network.getGenerator(options.relays, 
-                                                options.subscribers,
-                                                options.width, options.height, 
-                                                options.seed, options.channels);
+        networkGenerator = Network.getGenerator(options.relays,
+                options.subscribers,
+                options.width, options.height,
+                options.seed, options.channels);
         network = networkGenerator.create();
 
         Transformer<Edge, Double> wtTransformer = new Transformer<Edge, Double>() {
+
             public Double transform(Edge e) {
                 if (e.capacity > 0.0) {
                     return e.length;
@@ -104,9 +106,10 @@ public class Rcs {
             }
         };
 
-        Transformer<Edge, Double>pTransformer = new Transformer<Edge, Double>() {
+        Transformer<Edge, Double> pTransformer = new Transformer<Edge, Double>() {
+
             public Double transform(Edge e) {
-                return e.bottleNeckWeight();                
+                return e.bottleNeckWeight();
             }
         };
 
@@ -125,25 +128,37 @@ public class Rcs {
         List<Edge> dpath = dsp.getPath(source, destination);
         System.out.println("Dijkstra Path");
         System.out.println(dpath.toString());
-        for(Edge e: dpath) { e.type = 1; }
+        for (Edge e : dpath) {
+            e.type = 1;
+        }
+
+        ChannelSelection cs = new ChannelSelection(network);
+        double dijkstraThpt = cs.selectChannels(dpath);
+
 
         PrimMinimumSpanningTree psp = new PrimMinimumSpanningTree(networkGenerator.networkFactory, pTransformer);
         Graph primTree = psp.transform(network);
         //System.out.println("Prim Tree");
         //System.out.println(primTree.toString());
-        for(Object e: primTree.getEdges()) { ((Edge)e).type = 2; }
+        for (Object e : primTree.getEdges()) {
+            ((Edge) e).type = 2;
+        }
 
         // Clear out markings
-        for(Object v: primTree.getVertices()) { ((Vertex)v).isMarked = false; }
-        for(Object e: primTree.getEdges()) {    ((Edge)e).isMarked = false; }
+        for (Object v : primTree.getVertices()) {
+            ((Vertex) v).isMarked = false;
+        }
+        for (Object e : primTree.getEdges()) {
+            ((Edge) e).isMarked = false;
+        }
 
         //List<Edge> p = new ArrayList<Edge>();
         //dfsPath(primTree, source, destination, "", p);
         DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
         List<Edge> p = dsp2.getPath(source, destination);
 
-        for(Edge e: p) { 
-            e.type = 4; 
+        for (Edge e : p) {
+            e.type = 4;
             //Pair<Edge> ends = primTree.getEndpoints(e);
             //System.out.println("Painting Edge Red: " + e 
             //                 + "["+ends.getFirst()+","+ends.getSecond()+"]");
@@ -151,9 +166,12 @@ public class Rcs {
         System.out.println("Prim Path");
         System.out.println(p.toString());
 
+
+        double primThpt = cs.selectChannels(p);
+
         network.draw(1024, 768, "Routing and Channel Selection Application");
         System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim");
-        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", 0.0, 0.0");
+        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + dijkstraThpt + ", " + primThpt);
         network.jf.repaint();
     }
 }
