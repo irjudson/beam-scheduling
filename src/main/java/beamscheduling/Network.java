@@ -163,8 +163,6 @@ public class Network<V, E>
 
     public Vertex randomRelay() {
         Vector<V> v = new Vector<V>(this.getVertices());
-        System.out.println(v);
-        System.out.println(this.random.nextInt(v.size()));
         return((Vertex)v.get(this.random.nextInt(v.size())));
     }
 

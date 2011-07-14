@@ -122,6 +122,30 @@ public class Rcs {
         source.type = 3;
         destination.type = 4;
 
+        // Find dmax and dmin
+        double dmin = Double.MAX_VALUE, dmax = Double.MIN_VALUE;
+        for(Object e1: network.getEdges()){
+            Pair<Object> ends = network.getEndpoints(e1);
+            Vertex a = (Vertex)ends.getFirst();
+            Vertex b = (Vertex)ends.getSecond();
+            double ad = (a.distanceTo(source) + b.distanceTo(destination)) /2.0;
+            if (ad < dmin) { dmin = ad; }
+            if (ad > dmax) { dmax = ad; }
+        }
+
+        // Compute weights for the edges
+        for(Object e1: network.getEdges()) {
+            Edge e = (Edge)e1;
+            Pair<Object> ends = network.getEndpoints(e1);
+            Vertex a = (Vertex)ends.getFirst();
+            Vertex b = (Vertex)ends.getSecond();
+            double d = (a.distanceTo(source) + b.distanceTo(destination)) /2.0;
+            e.weight = (1.0 + (dmax - d)/(dmax - dmin)) / 2.0;
+            if (options.verbose) {
+                System.out.println("Edge: " + e.id + " W: " + e.weight);
+            }
+        }
+
         if (options.verbose) {
             System.out.println("S: " + source + " D: " + destination);
         }
