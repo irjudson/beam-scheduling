@@ -163,8 +163,14 @@ public class Rcs {
             e.type = 1;
         }
 
-        ChannelSelection cs = new ChannelSelection(network);
-        double dijkstraThpt = cs.selectChannels(dpath);
+        ChannelSelection cs = null;
+        double dijkstraThpt = 0.0d;
+        try {
+            cs = new ChannelSelection(network);
+            dijkstraThpt = cs.selectChannels(dpath);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("S: " + source + " D: " + destination);
+        }
 
         PrimMinimumSpanningTree psp = new PrimMinimumSpanningTree(networkGenerator.networkFactory, pTransformer);
         Graph primTree = psp.transform(network);
