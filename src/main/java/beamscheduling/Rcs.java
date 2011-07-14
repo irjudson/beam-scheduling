@@ -122,6 +122,10 @@ public class Rcs {
         source.type = 3;
         destination.type = 4;
 
+        if (options.verbose) {
+            System.out.println("S: " + source + " D: " + destination);
+        }
+
         DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer, false);
         List<Edge> dpath = dsp.getPath(source, destination);
         System.out.println("Dijkstra Path");

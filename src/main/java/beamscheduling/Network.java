@@ -161,12 +161,11 @@ public class Network<V, E>
         jf.setVisible(true);
     }
 
-    public Vertex randomSub() {
-        return this.subList[this.random.nextInt(this.subList.length)];
-    }
-
     public Vertex randomRelay() {
-        return this.relayList[this.random.nextInt(this.relayList.length)];
+        Vector<V> v = new Vector<V>(this.getVertices());
+        System.out.println(v);
+        System.out.println(this.random.nextInt(v.size()));
+        return((Vertex)v.get(this.random.nextInt(v.size())));
     }
 
     public void calculateBeamSets() {
