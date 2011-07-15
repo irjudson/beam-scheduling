@@ -37,4 +37,8 @@ public class RcsOptions {
   @Option(name = "-v", aliases = {"--verbose"}, metaVar = "VERBOSE",
           usage = "print lots of information.")
     public Boolean verbose = false;
+
+  @Option(name = "-i", aliases = {"--iterations"}, metaVar = "ITER",
+          usage = "average over specified number of iterations.")
+    public Integer iter = 10;
 }

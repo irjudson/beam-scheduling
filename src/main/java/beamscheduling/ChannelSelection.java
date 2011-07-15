@@ -197,8 +197,7 @@ public class ChannelSelection {
         }
 
         if (optPathCS != null) {
-            System.out.println("Optimal channel selection: ");
-            System.out.println(optPathCS.selected);
+            System.out.println("Optimal channel selection: " + optPathCS.selected);
             System.out.println("Optimal throughput: " + optPathCS.throughput);
             return optPathCS.throughput;
         }
@@ -416,8 +415,7 @@ public class ChannelSelection {
         }
 
 
-        System.out.println("Greedy channel selection: ");
-        System.out.println(greedyPathCS.selected);
+        System.out.println("Greedy channel selection: " + greedyPathCS.selected);
         System.out.println("Greedy CS throughput: " + greedyPathCS.throughput);
         return greedyPathCS.throughput;
 

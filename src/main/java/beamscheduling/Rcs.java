@@ -30,8 +30,8 @@ public class Rcs {
     static Logger logger = Logger.getLogger("RoutingChannelSelection");
 
     public static int dfsPath(Graph network, Vertex source,
-            Vertex destination, String prefix,
-            List<Edge> path) {
+                              Vertex destination, String prefix,
+                              List<Edge> path) {
         //System.out.println(prefix + source);
 
         for (Object o : network.getNeighbors(source)) {
@@ -73,6 +73,12 @@ public class Rcs {
         Network network;
         RcsOptions options = new RcsOptions();
         CmdLineParser parser = new CmdLineParser(options);
+        Draw drawing = null;
+        ChannelSelection cs = null;
+        int[] sources, destinations;
+        double[] primThpt, primThptGdyCS;
+        double[] dijkstraThpt, dijkstraThptGdyCS;
+        
         parser.setUsageWidth(80);
 
         BasicConfigurator.configure();
@@ -87,12 +93,21 @@ public class Rcs {
             System.exit(1);
         }
 
+        sources = new int[options.iter];
+        destinations = new int[options.iter];
+        primThpt = new double[options.iter];
+        primThptGdyCS = new double[options.iter];
+        dijkstraThpt = new double[options.iter];
+        dijkstraThptGdyCS = new double[options.iter];
+
         // Handle options that matter
-        System.out.println("Random Seed: " + options.seed);
+        if (options.verbose) {
+            System.out.println("Random Seed: " + options.seed);
+        }
         networkGenerator = Network.getGenerator(options.relays,
-                options.subscribers,
-                options.width, options.height,
-                options.seed, options.channels);
+                                                options.subscribers,
+                                                options.width, options.height,
+                                                options.seed, options.channels);
         network = networkGenerator.create();
 
         Transformer<Edge, Double> wtTransformer = new Transformer<Edge, Double>() {
@@ -113,121 +128,126 @@ public class Rcs {
             }
         };
 
-        Vertex source = network.randomRelay();
-        Vertex destination = network.randomRelay();
-        while (source == destination) {
-            destination = network.randomRelay();
-        }
-
-        source.type = 3;
-        destination.type = 4;
-
-        if (options.verbose) {
-            System.out.println("Source: " + source
-                    + " Destination: " + destination);
-        }
-
-        // Find dmax and dmin
-        double dmin = Double.MAX_VALUE, dmax = Double.MIN_VALUE;
-        for (Object e1 : network.getEdges()) {
-            Pair<Object> ends = network.getEndpoints(e1);
-            Vertex a = (Vertex) ends.getFirst();
-            Vertex b = (Vertex) ends.getSecond();
-            double ad = (a.distanceTo(source) + b.distanceTo(destination)) / 2.0;
-            if (ad < dmin) {
-                dmin = ad;
+        int count = 0;
+        while(count < options.iter) {
+            Vertex source = network.randomRelay();
+            Vertex destination = network.randomRelay();
+            while (source == destination) {
+                destination = network.randomRelay();
             }
-            if (ad > dmax) {
-                dmax = ad;
-            }
-        }
 
-        // Compute weights for the edges
-        for (Object e1 : network.getEdges()) {
-            Edge e = (Edge) e1;
-            Pair<Object> ends = network.getEndpoints(e1);
-            Vertex a = (Vertex) ends.getFirst();
-            Vertex b = (Vertex) ends.getSecond();
-            double d = (a.distanceTo(source) + b.distanceTo(destination)) / 2.0;
-            e.weight = (1.0 + (dmax - d) / (dmax - dmin)) / 2.0;
+            source.type = 3;
+            destination.type = 4;
+
             if (options.verbose) {
-                System.out.println("Edge: " + e.id + " W: " + e.weight);
+                System.out.println("Source: " + source
+                                   + " Destination: " + destination);
             }
-        }
 
-        if (options.verbose) {
-            System.out.println("S: " + source + " D: " + destination);
-        }
+            // Find dmax and dmin
+            double dmin = Double.MAX_VALUE, dmax = Double.MIN_VALUE;
+            for (Object e1 : network.getEdges()) {
+                Pair<Object> ends = network.getEndpoints(e1);
+                Vertex a = (Vertex) ends.getFirst();
+                Vertex b = (Vertex) ends.getSecond();
+                double ad = (a.distanceTo(source) + b.distanceTo(destination)) / 2.0;
+                if (ad < dmin) {
+                    dmin = ad;
+                }
+                if (ad > dmax) {
+                    dmax = ad;
+                }
+            }
 
-        DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer, false);
-        List<Edge> dpath = dsp.getPath(source, destination);
-        System.out.println("Dijkstra Path");
-        System.out.println(dpath.toString());
-        for (Edge e : dpath) {
-            e.type = 1;
-        }
+            // Compute weights for the edges
+            for (Object e1 : network.getEdges()) {
+                Edge e = (Edge) e1;
+                Pair<Object> ends = network.getEndpoints(e1);
+                Vertex a = (Vertex) ends.getFirst();
+                Vertex b = (Vertex) ends.getSecond();
+                double d = (a.distanceTo(source) + b.distanceTo(destination)) / 2.0;
+                e.weight = (1.0 + (dmax - d) / (dmax - dmin)) / 2.0;
+                if (options.verbose) {
+                    System.out.println("Edge: " + e.id + " W: " + e.weight);
+                }
+            }
 
-        ChannelSelection cs = null;
-        double dijkstraThpt = 0.0d;
-        double dijkstraThptGdyCS = 0.0d;
-        try {
-            cs = new ChannelSelection(network);
-            dijkstraThpt = cs.selectChannels(dpath);
-            dijkstraThptGdyCS = cs.greedySelectChannels(dpath);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("S: " + source + " D: " + destination);
-        }
-
-        PrimMinimumSpanningTree psp = new PrimMinimumSpanningTree(networkGenerator.networkFactory, pTransformer);
-        Graph primTree = psp.transform(network);
-        if (options.verbose) {
-            System.out.println("Prim Tree");
-            System.out.println(primTree.toString());
-        }
-        for (Object e : primTree.getEdges()) {
-            ((Edge) e).type = 2;
-        }
-
-        // Clear out markings
-        for (Object v : primTree.getVertices()) {
-            ((Vertex) v).isMarked = false;
-        }
-        for (Object e : primTree.getEdges()) {
-            ((Edge) e).isMarked = false;
-        }
-
-        // Internal implementation - Not Used IRJ - 2011
-        //List<Edge> p = new ArrayList<Edge>();
-        //dfsPath(primTree, source, destination, "", p);
-
-        DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
-        List<Edge> p = dsp2.getPath(source, destination);
-
-        for (Edge e : p) {
-            e.type = 4;
             if (options.verbose) {
-                Pair<Edge> ends = primTree.getEndpoints(e);
-                System.out.println("Painting Edge Red: " + e
-                        + "[" + ends.getFirst() + ","
-                        + ends.getSecond() + "]");
+                System.out.println("S: " + source + " D: " + destination);
+            }
+
+            DijkstraShortestPath<Vertex, Edge> dsp = new DijkstraShortestPath(network, wtTransformer, false);
+            List<Edge> dpath = dsp.getPath(source, destination);
+            if (dpath.size() == 0) {
+                continue;
+            } else {
+                System.out.println("["+count+"] Dijkstra Path: " + dpath.toString());
+                for (Edge e : dpath) {
+                    e.type = 1;
+                }
+            
+                try {
+                    cs = new ChannelSelection(network);
+                    dijkstraThpt[count] = cs.selectChannels(dpath);
+                    dijkstraThptGdyCS[count] = cs.greedySelectChannels(dpath);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("S: " + source + " D: " + destination);
+                }
+
+                PrimMinimumSpanningTree psp = new PrimMinimumSpanningTree(networkGenerator.networkFactory, pTransformer);
+                Graph primTree = psp.transform(network);
+                if (options.verbose) {
+                    System.out.println("Prim Tree: "+ primTree.toString());
+                }
+                for (Object e : primTree.getEdges()) {
+                    ((Edge) e).type = 2;
+                }
+
+                // Clear out markings
+                for (Object v : primTree.getVertices()) {
+                    ((Vertex) v).isMarked = false;
+                }
+                for (Object e : primTree.getEdges()) {
+                    ((Edge) e).isMarked = false;
+                }
+
+                // Internal implementation - Not Used IRJ - 2011
+                //List<Edge> p = new ArrayList<Edge>();
+                //dfsPath(primTree, source, destination, "", p);
+
+                DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
+                List<Edge> p = dsp2.getPath(source, destination);
+
+                for (Edge e : p) {
+                    e.type = 4;
+                    if (options.verbose) {
+                        Pair<Edge> ends = primTree.getEndpoints(e);
+                        System.out.println("Painting Edge Red: " + e
+                                           + "[" + ends.getFirst() + ","
+                                           + ends.getSecond() + "]");
+                    }
+                }
+                System.out.println("["+count+"] Prim Path: " + p.toString());
+                
+                primThpt[count] = cs.selectChannels(p);
+                primThptGdyCS[count] = cs.greedySelectChannels(p);
+
+                if (options.display) {
+                    drawing = new Draw(network, 1024, 768, "Routing and Channel Selection Application");
+                    drawing.draw();
+                }
+                sources[count] = source.id;
+                destinations[count] = destination.id;
+                count += 1;
             }
         }
-        System.out.println("Prim Path");
-        System.out.println(p.toString());
-
-        double primThpt = cs.selectChannels(p);
-        double primThptGdyCS = cs.greedySelectChannels(p);
+        System.out.println("Seed, Iter, Width, Height, Nodes, Users, Channels, Source, Destination, Dijkstra, Prim, DijkstraGdyCS, PrimGdyCS");
+        for(int i = 0; i < options.iter; i++) {
+            System.out.println(options.seed + ", " + i + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + sources[i] + ", " + destinations[i] + ", " + dijkstraThpt[i] + ", " + primThpt[i] + ", " + dijkstraThptGdyCS[i] + ", " + primThptGdyCS[i]);
+        }
 
         if (options.display) {
-            network.draw(1024, 768,
-                    "Routing and Channel Selection Application");
-        }
-
-        System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim, DijkstraGdyCS, PrimGdyCS");
-        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + dijkstraThpt + ", " + primThpt+ ", " + dijkstraThptGdyCS + ", " + primThptGdyCS);
-
-        if (options.display) {
-            network.jf.repaint();
+            drawing.repaint();
         }
     }
 }
