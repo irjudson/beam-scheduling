@@ -123,29 +123,33 @@ public class Rcs {
         destination.type = 4;
 
         if (options.verbose) {
-            System.out.println("Source: " + source 
-                               + " Destination: " + destination);
+            System.out.println("Source: " + source
+                    + " Destination: " + destination);
         }
 
         // Find dmax and dmin
         double dmin = Double.MAX_VALUE, dmax = Double.MIN_VALUE;
-        for(Object e1: network.getEdges()){
+        for (Object e1 : network.getEdges()) {
             Pair<Object> ends = network.getEndpoints(e1);
-            Vertex a = (Vertex)ends.getFirst();
-            Vertex b = (Vertex)ends.getSecond();
-            double ad = (a.distanceTo(source) + b.distanceTo(destination)) /2.0;
-            if (ad < dmin) { dmin = ad; }
-            if (ad > dmax) { dmax = ad; }
+            Vertex a = (Vertex) ends.getFirst();
+            Vertex b = (Vertex) ends.getSecond();
+            double ad = (a.distanceTo(source) + b.distanceTo(destination)) / 2.0;
+            if (ad < dmin) {
+                dmin = ad;
+            }
+            if (ad > dmax) {
+                dmax = ad;
+            }
         }
 
         // Compute weights for the edges
-        for(Object e1: network.getEdges()) {
-            Edge e = (Edge)e1;
+        for (Object e1 : network.getEdges()) {
+            Edge e = (Edge) e1;
             Pair<Object> ends = network.getEndpoints(e1);
-            Vertex a = (Vertex)ends.getFirst();
-            Vertex b = (Vertex)ends.getSecond();
-            double d = (a.distanceTo(source) + b.distanceTo(destination)) /2.0;
-            e.weight = (1.0 + (dmax - d)/(dmax - dmin)) / 2.0;
+            Vertex a = (Vertex) ends.getFirst();
+            Vertex b = (Vertex) ends.getSecond();
+            double d = (a.distanceTo(source) + b.distanceTo(destination)) / 2.0;
+            e.weight = (1.0 + (dmax - d) / (dmax - dmin)) / 2.0;
             if (options.verbose) {
                 System.out.println("Edge: " + e.id + " W: " + e.weight);
             }
@@ -165,9 +169,11 @@ public class Rcs {
 
         ChannelSelection cs = null;
         double dijkstraThpt = 0.0d;
+        double dijkstraThptGdyCS = 0.0d;
         try {
             cs = new ChannelSelection(network);
             dijkstraThpt = cs.selectChannels(dpath);
+            dijkstraThptGdyCS = cs.greedySelectChannels(dpath);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("S: " + source + " D: " + destination);
         }
@@ -193,32 +199,35 @@ public class Rcs {
         // Internal implementation - Not Used IRJ - 2011
         //List<Edge> p = new ArrayList<Edge>();
         //dfsPath(primTree, source, destination, "", p);
- 
-       DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
+
+        DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
         List<Edge> p = dsp2.getPath(source, destination);
 
         for (Edge e : p) {
             e.type = 4;
             if (options.verbose) {
                 Pair<Edge> ends = primTree.getEndpoints(e);
-                System.out.println("Painting Edge Red: " + e 
-                                   + "[" + ends.getFirst() + ","
-                                   + ends.getSecond() + "]");
+                System.out.println("Painting Edge Red: " + e
+                        + "[" + ends.getFirst() + ","
+                        + ends.getSecond() + "]");
             }
         }
         System.out.println("Prim Path");
         System.out.println(p.toString());
 
         double primThpt = cs.selectChannels(p);
+        double primThptGdyCS = cs.greedySelectChannels(p);
 
-        if(options.display) {
-            network.draw(1024, 768, 
-                         "Routing and Channel Selection Application");
+        if (options.display) {
+            network.draw(1024, 768,
+                    "Routing and Channel Selection Application");
         }
 
-        System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim");
-        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + dijkstraThpt + ", " + primThpt);
+        System.out.println("Seed, Width, Height, Nodes, Users, Channels, Dijkstra, Prim, DijkstraGdyCS, PrimGdyCS");
+        System.out.println(options.seed + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + dijkstraThpt + ", " + primThpt+ ", " + dijkstraThptGdyCS + ", " + primThptGdyCS);
 
-        if(options.display) { network.jf.repaint(); }
+        if (options.display) {
+            network.jf.repaint();
+        }
     }
 }
