@@ -18,55 +18,83 @@ import edu.uci.ics.jung.algorithms.shortestpath.PrimMinimumSpanningTree;
 import edu.uci.ics.jung.graph.util.Pair;
 import edu.uci.ics.jung.graph.Graph;
 
-// for dijkstra the weights can just be the physical link distance 
-// (assuming there is at least one available channel on the link). 
-// basically we should assign random channels to each link, 
-// then place primary users (removing some channels), any link 
-// that still has >= 1 channel survives, then we run routing algorithms 
-// to get paths, then channel selection on each path to determine the 
-// end-to-end quality
 public class Rcs {
 
     static Logger logger = Logger.getLogger("RoutingChannelSelection");
 
-    public static int dfsPath(Graph network, Vertex source,
-                              Vertex destination, String prefix,
-                              List<Edge> path) {
-        //System.out.println(prefix + source);
-
-        for (Object o : network.getNeighbors(source)) {
-            Vertex v = (Vertex) o;
-            Edge e = (Edge) network.findEdge(source, v);
-
-            if (e == null) {
-                return (0);
-            }
-
-            if (path.size() > 0) {
-                return (1);
-            }
-
-            // Found the destination, add it to the result triggering
-            // return path collection
-            if (v == destination) {
-                System.out.println("-Adding e: " + e);
+    public static void dfsPath(Graph network, Vertex src, Vertex dst,
+                              String prefix, Vector paths, 
+                              ArrayList<Edge> path) {
+        for(Object o: network.getNeighbors(src)) {
+            Vertex v = (Vertex)o;
+            Edge e = (Edge) network.findEdge(src, v);
+            if (e == null || path.contains(e)) {     // Bad node or edge
+                continue;  
+            } else if (v == dst) {           // Found the destination
                 path.add(e);
-                //System.out.println(prefix+"+"+destination);
-                return (1);
-            } else if (!e.isMarked) {
-                e.isMarked = true;
-                dfsPath(network, v, destination, prefix + "|", path);
-                // On the way back out
-                if (path.size() > 0) {
-                    System.out.println("+Adding e: " + e);
-                    path.add(e);
-                    return (1);
+                paths.add(path.clone());
+                path.remove(e);
+            } else {                                 // Still looking...
+                path.add(e);
+                dfsPath(network, v, dst, prefix + "|", paths, path);
+                path.remove(e);
+            }
+        }
+    }
+
+    public static List<Edge> rcsPath(Graph network, Vertex src,
+                                     Vertex dst, int consider) {
+        List<Edge> bestPath = null;
+        ChannelSelection cs = new ChannelSelection((Network)network);
+                
+
+        // Initialize all paths
+        for (Object o : network.getVertices()) {
+            Vertex v = (Vertex) o;
+            if (v != src) {
+                v.rcsPaths = new Vector();
+                for(int i = 0; i < consider; i++) {
+                    v.rcsPaths.add(new ArrayList<Edge>());
+                }
+            } 
+        }
+
+        // As long as no paths are getting better...
+        double improvement = 0.0d, best = 0.0d;
+        while(improvement == 0.0d) {
+            // Try to extend all the paths
+            for(Object o: network.getEdges()) {
+                Edge e = (Edge)o;
+                for(Object o2: network.getVertices()) {
+                    Vertex v = (Vertex)o2;
+                    if (v != src) {
+                        for(int i = 0; i < v.rcsPaths.size(); i++) {
+                            List<Edge> path= (ArrayList<Edge>)v.rcsPaths.get(i);
+                            double old = cs.selectChannels((List<Edge>)path);
+                            path.add(e);
+                            if(cs.selectChannels(path) < old) {
+                                path.remove(e);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // See if there was any improvement
+            for(int i = 0; i < consider; i++) {
+                List<Edge> path = (ArrayList<Edge>)src.rcsPaths.get(i);
+                double candidate = cs.selectChannels(path);
+                System.out.println("RCS Calculation: " +best+ " " + candidate);
+                if (candidate > best) {
+                    improvement = candidate - best;
+                    best = candidate;
+                    bestPath = path;
                 }
             }
         }
-        return (1);
+        return bestPath;
     }
-
+    
     public static void main(String[] args) {
         HashMap subscribers;
         NetworkGenerator networkGenerator;
@@ -199,6 +227,7 @@ public class Rcs {
                 if (options.verbose) {
                     System.out.println("Prim Tree: "+ primTree.toString());
                 }
+
                 for (Object e : primTree.getEdges()) {
                     ((Edge) e).type = 2;
                 }
@@ -211,14 +240,17 @@ public class Rcs {
                     ((Edge) e).isMarked = false;
                 }
 
-                // Internal implementation - Not Used IRJ - 2011
-                //List<Edge> p = new ArrayList<Edge>();
-                //dfsPath(primTree, source, destination, "", p);
+                // RCS
+                List<Edge> rcsPath = rcsPath(network, source, destination, 
+                                             options.consider);
+                if (rcsPath == null) { rcsPath = new ArrayList<Edge>(); }
+                System.out.println("["+count+"] RCS Path: " 
+                                   + rcsPath.toString());
 
                 DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
-                List<Edge> p = dsp2.getPath(source, destination);
+                List<Edge> primpath = dsp2.getPath(source, destination);
 
-                for (Edge e : p) {
+                for (Edge e : primpath) {
                     e.type = 4;
                     if (options.verbose) {
                         Pair<Edge> ends = primTree.getEndpoints(e);
@@ -227,20 +259,24 @@ public class Rcs {
                                            + ends.getSecond() + "]");
                     }
                 }
-                System.out.println("["+count+"] Prim Path: " + p.toString());
+                System.out.println("["+count+"] Prim Path: " 
+                                   + primpath.toString());
                 
-                primThpt[count] = cs.selectChannels(p);
-                primThptGdyCS[count] = cs.greedySelectChannels(p);
+                primThpt[count] = cs.selectChannels(primpath);
+                primThptGdyCS[count] = cs.greedySelectChannels(primpath);
 
-                if (options.display) {
-                    drawing = new Draw(network, 1024, 768, "Routing and Channel Selection Application");
-                    drawing.draw();
-                }
                 sources[count] = source.id;
                 destinations[count] = destination.id;
                 count += 1;
             }
         }
+
+        if (options.display) {
+            drawing = new Draw(network, 1024, 768, 
+                               "Routing and Channel Selection Application");
+            drawing.draw();
+        }
+
         System.out.println("Seed, Iter, Width, Height, Nodes, Users, Channels, Source, Destination, Dijkstra, Prim, DijkstraGdyCS, PrimGdyCS");
         for(int i = 0; i < options.iter; i++) {
             System.out.println(options.seed + ", " + i + ", " + options.width + ", " + options.height + ", " + options.relays + ", " + options.subscribers + ", " + options.channels + ", " + sources[i] + ", " + destinations[i] + ", " + dijkstraThpt[i] + ", " + primThpt[i] + ", " + dijkstraThptGdyCS[i] + ", " + primThptGdyCS[i]);
