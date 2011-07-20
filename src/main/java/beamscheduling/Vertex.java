@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
 import java.util.Collection;
+import java.util.Vector;
 import edu.uci.ics.jung.graph.Graph;
 
 public class Vertex implements Comparable {
@@ -29,6 +30,7 @@ public class Vertex implements Comparable {
     private double lambda = c / frequency;
     public Integer interferenceChannel;
     public Boolean isMarked = false;
+    public Vector rcsPaths;  // vector of List<Edges>
 
     public int compareTo(Object otherVertex) throws ClassCastException {
         if(!(otherVertex instanceof Vertex))
