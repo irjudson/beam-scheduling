@@ -88,6 +88,8 @@ class Draw {
                     return Color.GREEN;
                 } else if (e.type == 4) {
                     return Color.RED;
+                } else if (e.type == 5) {
+                    return Color.YELLOW;
                 } else {
                     return Color.BLACK;
                 }
