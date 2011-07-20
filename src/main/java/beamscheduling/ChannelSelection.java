@@ -100,6 +100,10 @@ public class ChannelSelection {
     public double selectChannels(List<Edge> pathList) {
         PathCS result = new PathCS();
 
+        if (pathList.isEmpty()) {
+            System.out.println("..called selectChannels for empty path.");
+            return 0.0;
+        }
         pathLen = pathList.size();
         path = new Edge[pathLen];
         int a = 0;
