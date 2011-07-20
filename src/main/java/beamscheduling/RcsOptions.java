@@ -41,4 +41,8 @@ public class RcsOptions {
   @Option(name = "-i", aliases = {"--iterations"}, metaVar = "ITER",
           usage = "average over specified number of iterations.")
     public Integer iter = 10;
+
+  @Option(name = "-r", aliases = {"--rcs"}, metaVar = "RCS",
+          usage = "Consider the best N paths in RCS calcuations.")
+    public Integer consider = 1;
 }
