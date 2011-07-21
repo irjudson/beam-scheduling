@@ -42,9 +42,24 @@ public class Rcs {
         }
     }
 
+    public static Boolean inPath(List<Edge> path, Vertex vertex, 
+                                 Graph network) {
+        //System.out.println("Checking for " + vertex + " in " + path);
+        for(Edge e: path) {
+            Pair<Vertex> ends = network.getEndpoints(e);
+            if ((Vertex)ends.getFirst() == vertex || 
+                (Vertex)ends.getSecond() == vertex) { 
+                //System.out.println("Found " + vertex + " in " + path);
+                return true; 
+            }
+        }
+        return false;
+    }
+
     public static List<Edge> rcsPath(Graph network, Vertex src,
                                      Vertex dst, int consider) {
         ChannelSelection cs = new ChannelSelection((Network)network);
+        int uremove = 0, vremove = 0;
 
         // Initialize all paths
         for (Object o : network.getVertices()) {
@@ -73,22 +88,44 @@ public class Rcs {
 
                 for(Object c: u.rcsPaths.keySet()) {
                     double othpt = (Double)c;
-                    List<Edge> path = (List<Edge>)v.rcsPaths.get(c);
-                    if (path != null) {
+                    List<Edge> path = (List<Edge>)u.rcsPaths.get(c);
+                    if (! path.contains(e) && (!inPath(path, u, network) 
+                                               || !inPath(path, v, network))){
                         path.add(e);
                         double cthpt = cs.selectChannels((List<Edge>)path);
+                        // If the throughput of the extended path is better
                         if (cthpt > othpt) {
-                            u.rcsPaths.remove(c);
+                            // Remove the old one
+                            uremove += 1;
+                            //u.rcsPaths.remove(c);
+                            // Add the extended path to S(u)
                             u.rcsPaths.put(cthpt, path);
-                            System.out.println("Updating " + u + " with path " + path + " with thpt " + cthpt);
+                            System.out.println("Updating " + e.id + " (" + u 
+                                               + ","+ v +") [" 
+                                               + cthpt + "] = " + path);
+                            // Add the extended path to S(v)
                             v.rcsPaths.put(cthpt, path);
-                            System.out.println("Updating " + v + " with path " + path + " with thpt " + cthpt);
-                            v.rcsPaths.remove(v.rcsPaths.firstKey());
+                            // Remove the worst path from S(v)
+                            vremove += 1;
+                            //v.rcsPaths.remove(v.rcsPaths.firstKey());
+                            // Mark things to continue again
                             updating = true;
                         } else {
+                            // Mark things to quit
                             updating = false;
                         }
                     }
+                }
+
+                // Cleanup to make sure we don't break indexing anymore
+                while(uremove > 0) {
+                    u.rcsPaths.remove(u.rcsPaths.firstKey());
+                    uremove--;
+                }
+
+                while(vremove > 0) {
+                    v.rcsPaths.remove(v.rcsPaths.firstKey());
+                    vremove--;
                 }
             }
         }
@@ -240,6 +277,13 @@ public class Rcs {
                     ((Edge) e).isMarked = false;
                 }
 
+                DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
+                List<Edge> primpath = dsp2.getPath(source, destination);
+
+                for (Edge e : primpath) { e.type = 4; }
+                System.out.println("["+count+"] Prim Path: " 
+                                   + primpath.toString());
+                
                 // RCS
                 List<Edge> rcsPath = rcsPath(network, source, destination, 
                                              options.consider);
@@ -249,13 +293,6 @@ public class Rcs {
 
                 for(Edge e: rcsPath) { e.type = 5; }
 
-                DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
-                List<Edge> primpath = dsp2.getPath(source, destination);
-
-                for (Edge e : primpath) { e.type = 4; }
-                System.out.println("["+count+"] Prim Path: " 
-                                   + primpath.toString());
-                
                 primThpt[count] = cs.selectChannels(primpath);
                 primThptGdyCS[count] = cs.greedySelectChannels(primpath);
 
