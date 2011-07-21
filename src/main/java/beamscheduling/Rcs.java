@@ -44,55 +44,55 @@ public class Rcs {
 
     public static List<Edge> rcsPath(Graph network, Vertex src,
                                      Vertex dst, int consider) {
-        List<Edge> bestPath = null;
         ChannelSelection cs = new ChannelSelection((Network)network);
-                
 
         // Initialize all paths
         for (Object o : network.getVertices()) {
             Vertex v = (Vertex) o;
             if (v != src) {
-                v.rcsPaths = new Vector();
+                v.rcsPaths = new TreeMap();
                 for(int i = 0; i < consider; i++) {
-                    v.rcsPaths.add(new ArrayList<Edge>());
+                    v.rcsPaths.put(0.0d, new ArrayList<Edge>());
                 }
-            } 
+            } else {
+                v.rcsPaths = new TreeMap();
+                v.rcsPaths.put(0.0d, new ArrayList<Edge>());
+            }
         }
 
-        // As long as no paths are getting better...
-        double improvement = 0.0d, best = 0.0d;
-        while(improvement == 0.0d) {
+        // As long as no paths are getting better...keep cycling edges & paths
+        Boolean updating = true;
+        while(updating) {
             // Try to extend all the paths
+            Vector newpaths = new Vector();
             for(Object o: network.getEdges()) {
                 Edge e = (Edge)o;
-                for(Object o2: network.getVertices()) {
-                    Vertex v = (Vertex)o2;
-                    if (v != src) {
-                        for(int i = 0; i < v.rcsPaths.size(); i++) {
-                            List<Edge> path= (ArrayList<Edge>)v.rcsPaths.get(i);
-                            double old = cs.selectChannels((List<Edge>)path);
-                            path.add(e);
-                            if(cs.selectChannels(path) < old) {
-                                path.remove(e);
-                            }
+                Pair<Vertex> ends = network.getEndpoints(e);
+                Vertex u = (Vertex)ends.getFirst();
+                Vertex v = (Vertex)ends.getSecond();
+
+                for(Object c: u.rcsPaths.keySet()) {
+                    double othpt = (Double)c;
+                    List<Edge> path = (List<Edge>)v.rcsPaths.get(c);
+                    if (path != null) {
+                        path.add(e);
+                        double cthpt = cs.selectChannels((List<Edge>)path);
+                        if (cthpt > othpt) {
+                            u.rcsPaths.remove(c);
+                            u.rcsPaths.put(cthpt, path);
+                            System.out.println("Updating " + u + " with path " + path + " with thpt " + cthpt);
+                            v.rcsPaths.put(cthpt, path);
+                            System.out.println("Updating " + v + " with path " + path + " with thpt " + cthpt);
+                            v.rcsPaths.remove(v.rcsPaths.firstKey());
+                            updating = true;
+                        } else {
+                            updating = false;
                         }
                     }
                 }
             }
-
-            // See if there was any improvement
-            for(int i = 0; i < consider; i++) {
-                List<Edge> path = (ArrayList<Edge>)src.rcsPaths.get(i);
-                double candidate = cs.selectChannels(path);
-                System.out.println("RCS Calculation: " +best+ " " + candidate);
-                if (candidate > best) {
-                    improvement = candidate - best;
-                    best = candidate;
-                    bestPath = path;
-                }
-            }
         }
-        return bestPath;
+        return((List<Edge>)dst.rcsPaths.get(dst.rcsPaths.lastKey()));
     }
     
     public static void main(String[] args) {
@@ -247,18 +247,12 @@ public class Rcs {
                 System.out.println("["+count+"] RCS Path: " 
                                    + rcsPath.toString());
 
+                for(Edge e: rcsPath) { e.type = 5; }
+
                 DijkstraShortestPath<Vertex, Edge> dsp2 = new DijkstraShortestPath(primTree, wtTransformer, false);
                 List<Edge> primpath = dsp2.getPath(source, destination);
 
-                for (Edge e : primpath) {
-                    e.type = 4;
-                    if (options.verbose) {
-                        Pair<Edge> ends = primTree.getEndpoints(e);
-                        System.out.println("Painting Edge Red: " + e
-                                           + "[" + ends.getFirst() + ","
-                                           + ends.getSecond() + "]");
-                    }
-                }
+                for (Edge e : primpath) { e.type = 4; }
                 System.out.println("["+count+"] Prim Path: " 
                                    + primpath.toString());
                 

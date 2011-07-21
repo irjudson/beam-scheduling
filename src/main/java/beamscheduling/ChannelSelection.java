@@ -101,7 +101,7 @@ public class ChannelSelection {
         PathCS result = new PathCS();
 
         if (pathList.isEmpty()) {
-            System.out.println("..called selectChannels for empty path.");
+            //            System.out.println("..called selectChannels for empty path.");
             return 0.0;
         }
         pathLen = pathList.size();
