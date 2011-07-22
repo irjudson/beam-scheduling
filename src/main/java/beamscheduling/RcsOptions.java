@@ -16,7 +16,7 @@ public class RcsOptions {
 
   @Option(name = "-n", aliases = {"--nodes"}, metaVar = "NODES",
           usage = "Number of nodes in the base network.")
-    public int relays = 20;
+    public int relays = 25;
 
   @Option(name = "-s", aliases = {"--seed"}, metaVar = "SEED",
           usage = "Specify the random seed, defaults to a random seed.")
@@ -44,5 +44,5 @@ public class RcsOptions {
 
   @Option(name = "-r", aliases = {"--rcs"}, metaVar = "RCS",
           usage = "Consider the best N paths in RCS calcuations.")
-    public Integer consider = 1;
+    public Integer consider = 3;
 }
