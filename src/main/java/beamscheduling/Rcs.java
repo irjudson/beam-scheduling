@@ -43,35 +43,39 @@ public class Rcs {
     }
 
     public static List<Edge> rcsPath(Graph network, Vertex src,
-                                     Vertex dst, int consider, int sweeps) {
+                                     Vertex dst, int consider) {
         ChannelSelection cs = new ChannelSelection((Network)network);
 
         // Initialize all paths
         for (Object o : network.getVertices()) {
             Vertex v = (Vertex) o;
-            if (v != src) {
-                if (v.rcsPaths == null) {
-                    v.rcsPaths = new TreeMap();
-                }
-            } else {
-                v.rcsPaths = new TreeMap();
-                v.rcsPaths.put(0.0d, new ArrayList<Edge>());
+            v.intro = new HashMap();
+            v.rcsPaths = new TreeMap();
+
+        }
+
+        for (Object o : network.getVertices()) {
+            Vertex v = (Vertex) o;
+            if (v == src) {
+                ArrayList<Edge> p = new ArrayList<Edge>();
+                v.rcsPaths.put(0.0d, p);
+                v.intro.put(p, -1);
                 for(Object v0: network.getNeighbors(v)) {
-                    List<Edge> p = new ArrayList<Edge>();
+                    List<Edge> p0 = new ArrayList<Edge>();
                     Vertex v01 = (Vertex)v0;
                     Edge e = (Edge)network.findEdge(v, v0);
-                    p.add(e);
-                    double th = cs.selectChannels(p);
-                    if (v01.rcsPaths == null) {
-                        v01.rcsPaths = new TreeMap();
+                    if (e != null) {
+                        p0.add(e);
+                        double th = cs.selectChannels(p0);
+                        v01.rcsPaths.put(th, p0);
+                        v01.intro.put(p0, -1);
                     }
-                    v01.rcsPaths.put(th, p);
                 }
             }
         }
 
-        for(int i = 0; i < sweeps; i++) {
-            // System.out.println("RCS Sweep: " + i + "/" + sweeps);
+        for(int i = 0; i < network.getVertexCount(); i++) {
+            //System.out.println("RCS Sweep: " + i + "/" + network.getVertexCount());
             // For each edge see if we can extend the existing paths with it
             for(Object o: network.getEdges()) {
                 Edge e = (Edge)o;
@@ -79,31 +83,40 @@ public class Rcs {
                 Vertex u = (Vertex)ends.getFirst();
                 Vertex v = (Vertex)ends.getSecond();
                 ArrayList<Edge> path = null;
+
                 // First direction
                 if (v != src) {
                     for(Object c: u.rcsPaths.keySet()) {
-                        path = (ArrayList<Edge>)((ArrayList<Edge>)u.rcsPaths.get(c)).clone();
-                        path.add(e);
-                        v.rcsPaths.put(cs.selectChannels((List<Edge>)path), 
-                                       path);
-                        // If we added one and we're over, take one out
-                        if(v.rcsPaths.keySet().size() > consider) {
-                            v.rcsPaths.remove(v.rcsPaths.firstKey());
+                        ArrayList<Edge> opath = (ArrayList<Edge>)u.rcsPaths.get(c);
+                        if (opath.size() == (i - 1)) {
+                            path = (ArrayList<Edge>)opath.clone();
+                            path.add(e);
+                            v.rcsPaths.put(cs.selectChannels((List<Edge>)path), path);
+                            v.intro.put(path, i);
+                            // If we added one and we're over, take one out
+                            if(v.rcsPaths.keySet().size() > consider) {
+                                v.intro.remove(v.rcsPaths.get(v.rcsPaths.firstKey()));
+                                v.rcsPaths.remove(v.rcsPaths.firstKey());
+                            }
                         }
                     }
                 }
-
+                
                 // Second direction
-                if (u != src) {
+                if(u != src) {
                     for(Object c: v.rcsPaths.keySet()) {
                         double othpt = (Double)c;
-                        path = (ArrayList<Edge>)((ArrayList<Edge>)v.rcsPaths.get(c)).clone();
-                        path.add(e);
-                        u.rcsPaths.put(cs.selectChannels((List<Edge>)path),
-                                       path);
-                        // If we added one and we're over, take one out
-                        if(u.rcsPaths.keySet().size() > consider) {
-                            u.rcsPaths.remove(u.rcsPaths.firstKey());
+                        ArrayList<Edge> opath = (ArrayList<Edge>)v.rcsPaths.get(c);
+                        if (opath.size() == (i - 1)) {
+                            path = (ArrayList<Edge>)opath.clone();
+                            path.add(e);
+                            u.rcsPaths.put(cs.selectChannels((List<Edge>)path), path);
+                            u.intro.put(path, i);
+                            // If we added one and we're over, take one out
+                            if(u.rcsPaths.keySet().size() > consider) {
+                                u.intro.remove(u.rcsPaths.get(u.rcsPaths.firstKey()));
+                                u.rcsPaths.remove(u.rcsPaths.firstKey());
+                            }
                         }
                     }
                 }
@@ -235,7 +248,7 @@ public class Rcs {
                 try {
                     cs = new ChannelSelection(network);
                     dijkstraThpt[count] = cs.selectChannels(dpath);
-                    dijkstraThptGdyCS[count] = cs.greedySelectChannels(dpath);
+                    //dijkstraThptGdyCS[count] = cs.greedySelectChannels(dpath);
                 } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println("S: " + source + " D: " + destination);
                 }
@@ -265,10 +278,10 @@ public class Rcs {
                 System.out.println("["+count+"] Prim Path: " 
                                    + primpath.toString());
                 
+
                 // RCS
                 List<Edge> rcsPath = rcsPath(network, source, destination, 
-                                             options.consider, 
-                                             network.getVertexCount());
+                                             options.consider);
                 if (rcsPath == null) { rcsPath = new ArrayList<Edge>(); }
                 System.out.println("["+count+"] RCS Path: " 
                                    + rcsPath.toString());
@@ -278,12 +291,12 @@ public class Rcs {
                 rcsThpt[count] = cs.selectChannels(rcsPath);
 
                 primThpt[count] = cs.selectChannels(primpath);
-                primThptGdyCS[count] = cs.greedySelectChannels(primpath);
+                //primThptGdyCS[count] = cs.greedySelectChannels(primpath);
 
                 sources[count] = source.id;
                 destinations[count] = destination.id;
                 count += 1;
-            }
+            }                
         }
 
         if (options.display) {
@@ -292,7 +305,7 @@ public class Rcs {
             drawing.draw();
         }
 
-        System.out.println("Seed, Iter, Width, Height, Nodes, Users, Channels, Source, Destination, Dijkstra, Prim, DijkstraGdyCS, PrimGdyCS, RCS");
+	System.out.println("Seed, Iter, Width, Height, Nodes, Users, Channels, Source, Destination, Dijkstra, Prim, RCS");
         for(int i = 0; i < options.iter; i++) {
             System.out.println(options.seed + ", " + i + ", " 
                                + options.width + ", " + options.height + ", " 
@@ -300,12 +313,7 @@ public class Rcs {
                                + ", " + options.channels + ", " + sources[i] 
                                + ", " + destinations[i] + ", " 
                                + dijkstraThpt[i] + ", " + primThpt[i] + ", " 
-                               + dijkstraThptGdyCS[i] + ", " 
-                               + primThptGdyCS[i] + ", " + rcsThpt[i]);
-        }
-
-        if (options.display) {
-            drawing.repaint();
+			       + rcsThpt[i]);
         }
     }
 }
