@@ -22,6 +22,10 @@ public class ChannelSelection {
     // bridging sets
     TreeSet<LinkChannel>[] bridgingSet;
     int[] numBridgingSubsets;
+
+    // Optimal
+    PathCS optimalPathCS;
+
     // best PathCS
     PathCS[][] bestPathCS; // bestPathCS[i][k] = best PathCS for 1,..,i given kth bridging set
 
@@ -36,7 +40,6 @@ public class ChannelSelection {
             Edge e = path[i];
             for (int c = 0; c < e.channels.length; c++) {
                 if (e.channels[c] > 0.0) {
-                    //System.out.println("i = " +i);
                     availPairs[i].add(new LinkChannel(i, c));
                 }
             }
@@ -46,7 +49,6 @@ public class ChannelSelection {
     private boolean checkPathInterference(int channel, int i, int j) {
         Edge ei = path[i];
         Edge ej = path[j];
-        //System.out.println("checking intf " + channel + " " + ei + " " + ej );
         return network.interferes[ei.id][ej.id][channel];
     }
 
@@ -75,12 +77,6 @@ public class ChannelSelection {
             }
         }
 
-//        System.out.print("bridging set " + i + ":");
-//        for (LinkChannel lc : bridgingSet[i]) {
-//            System.out.print(" " + lc);
-//        }
-//        System.out.println();
-
         long numSubSets = twoExp(bridgingSet[i].size());
         if (numSubSets > Integer.MAX_VALUE) {
             System.out.println("bridging set too large, exiting...");
@@ -98,12 +94,7 @@ public class ChannelSelection {
     }
 
     public double selectChannels(List<Edge> pathList) {
-        PathCS result = new PathCS();
-
-        if (pathList.isEmpty()) {
-            //            System.out.println("..called selectChannels for empty path.");
-            return 0.0;
-        }
+        if (pathList.isEmpty()) { return 0.0; }
         pathLen = pathList.size();
         path = new Edge[pathLen];
         int a = 0;
@@ -136,12 +127,9 @@ public class ChannelSelection {
             newPart.removeAll(bridgingSet[i - 1]);
             TreeSet<LinkChannel> oldPart = (TreeSet<LinkChannel>) bridgingSet[i].clone();
             oldPart.retainAll(bridgingSet[i - 1]);
-//            System.out.println("newPart set " + i + ":" + newPart);
-//            System.out.println("oldPart set " + i + ":" + oldPart);
 
             for (int k = 0; k < numBridgingSubsets[i - 1]; k++) {
                 PathCS bestPrev = bestPathCS[i - 1][k];
-                //System.out.println("bestPathCS[" + (i - 1) + "][" + k + "].throughput = " + bestPrev.throughput);
                 TreeSet<LinkChannel> prevBridgeSubset = fromInt(bridgingSet[i - 1], k);
                 TreeSet<LinkChannel> oldPartCopy = (TreeSet<LinkChannel>) oldPart.clone();
                 oldPartCopy.retainAll(prevBridgeSubset);
@@ -157,13 +145,11 @@ public class ChannelSelection {
                     if (bestPathCS[i][nextBridgeIndex] == null
                             || testPathCS.throughput > bestPathCS[i][nextBridgeIndex].throughput) {
                         bestPathCS[i][nextBridgeIndex] = testPathCS;
-                        //System.out.println("setting bestPathCS[" + i + "][" + nextBridgeIndex + "] throughput = " + bestPathCS[i][nextBridgeIndex].throughput);
                     }
                 } else {
                     for (int l = 0; l < (1 << newPart.size()); l++) {
                         TreeSet<LinkChannel> nextBridgeSubset = fromInt(newPart, l);
                         nextBridgeSubset.addAll(oldPartCopy);
-                        //System.out.println("nextBridgeSubset " + nextBridgeSubset);
                         int nextBridgeIndex = toInt(bridgingSet[i], nextBridgeSubset);
                         PathCS testPathCS = new PathCS();
                         testPathCS.selected = (ArrayList<TreeSet<LinkChannel>>) bestPrev.selected.clone();
@@ -175,7 +161,6 @@ public class ChannelSelection {
                         if (bestPathCS[i][nextBridgeIndex] == null
                                 || testPathCS.throughput > bestPathCS[i][nextBridgeIndex].throughput) {
                             bestPathCS[i][nextBridgeIndex] = testPathCS;
-                            //System.out.println("setting bestPathCS[" + i + "][" + nextBridgeIndex + "] throughput = " + bestPathCS[i][nextBridgeIndex].throughput);
                         }
                     }
                 }
@@ -195,14 +180,14 @@ public class ChannelSelection {
             testPathCS.selected.add(nextBridgeSubsetCopy);
 
             evaluateLast(testPathCS, empty);
-            if (optPathCS == null || testPathCS.throughput > optPathCS.throughput) {
+            if (optPathCS == null 
+                || testPathCS.throughput > optPathCS.throughput) {
                 optPathCS = testPathCS;
             }
         }
 
         if (optPathCS != null) {
-            //            System.out.println("Optimal channel selection: " + optPathCS.selected);
-            //            System.out.println("Optimal throughput: " + optPathCS.throughput);
+            optimalPathCS = optPathCS;
             return optPathCS.throughput;
         }
         return 0.0;
@@ -272,20 +257,24 @@ public class ChannelSelection {
                     linkNums.add(lcb.pathLinkIndex);
                 }
             }
-            int maxChanClqSize = Math.max(maxCliqueSize, findMaxCliqueContaining(linkNums, i, c));
+            int maxChanClqSize = Math.max(maxCliqueSize, 
+                                          findMaxCliqueContaining(linkNums, 
+                                                                  i, c));
             linkThpt += path[i].channels[c] / maxChanClqSize;
         }
         pathCS.throughput = Math.min(pathCS.throughput, linkThpt);
     }
 
-    int findMaxCliqueContaining(ArrayList<Integer> linkNums, int loc, int channel) {
+    int findMaxCliqueContaining(ArrayList<Integer> linkNums, int loc, 
+                                int channel) {
         // assumes interval graph
-        //System.out.print("checking cliques " + linkNums + " loc " + loc + " channel " + channel);
         int maxSize = 0;
         int i = 0;
         while (i < linkNums.size()) {
             int j = i + 1;
-            while (j < linkNums.size() && checkPathInterference(channel, linkNums.get(i), linkNums.get(j))) {
+            while (j < linkNums.size() 
+                   && checkPathInterference(channel, linkNums.get(i), 
+                                            linkNums.get(j))) {
                 j++;
             }
             int size = j - i;
@@ -294,12 +283,10 @@ public class ChannelSelection {
             }
             i++;
         }
-        //System.out.println(" -> size = " + maxSize);
         return maxSize;
     }
 
     class LinkChannel implements Comparable<LinkChannel> {
-
         int pathLinkIndex;
         int channel;
 
@@ -322,13 +309,23 @@ public class ChannelSelection {
     }
 
     class PathCS {
-
         ArrayList<TreeSet<LinkChannel>> selected;
         double throughput;
 
         PathCS() {
             selected = new ArrayList<TreeSet<LinkChannel>>();
             throughput = Double.MAX_VALUE; // initial unlimited before using any links
+        }
+
+        public String toString() {
+            String out = new String();
+            out += "/"+throughput+"/ ";
+            for(Object o: selected) {
+                for(Object o2: (TreeSet)o) {
+                    out += " [" + (LinkChannel)o2 + " ]";
+                }
+            }
+            return(out);
         }
 
         void print() {
@@ -342,8 +339,6 @@ public class ChannelSelection {
 
     // simple greedy method
     public double greedySelectChannels(List<Edge> pathList) {
-        PathCS result = new PathCS();
-
         pathLen = pathList.size();
         path = new Edge[pathLen];
         int a = 0;
@@ -412,20 +407,16 @@ public class ChannelSelection {
                         linkNums.add(j);
                     }
                 }
-                int maxChanClqSize = Math.max(maxCliqueSize, findMaxCliqueContaining(linkNums, i, c));
+                int maxChanClqSize = Math.max(maxCliqueSize, 
+                                              findMaxCliqueContaining(linkNums, 
+                                                                      i, c));
                 linkThpt += path[i].channels[c] / maxChanClqSize;
             }
-            greedyPathCS.throughput = Math.min(greedyPathCS.throughput, linkThpt);
+            greedyPathCS.throughput = Math.min(greedyPathCS.throughput, 
+                                               linkThpt);
         }
-
-
-        //        System.out.println("Greedy channel selection: " + greedyPathCS.selected);
-        //        System.out.println("Greedy CS throughput: " + greedyPathCS.throughput);
         return greedyPathCS.throughput;
-
     }
-
-    
     
     // evaluate a path and channel selection (for RCS idea #2)
     public double greedySelectChannels(List<Edge> pathList, PathCS testPathCS) {
@@ -438,6 +429,11 @@ public class ChannelSelection {
             a++;
         }
 
+        System.out.println("Path: " + pathList + " TPCS: " + testPathCS);
+
+        if (testPathCS == null) {
+            testPathCS = new PathCS();
+        }
 
         for (int i = 0; i < pathLen; i++) {
             int maxCliqueSize = 1;
@@ -459,6 +455,7 @@ public class ChannelSelection {
                     maxCliqueSize = 3;
                 }
             }
+
             // now check for channel cliques
             double linkThpt = 0.0;
             for (LinkChannel lc : testPathCS.selected.get(i)) {
@@ -477,13 +474,13 @@ public class ChannelSelection {
                         linkNums.add(j);
                     }
                 }
-                int maxChanClqSize = Math.max(maxCliqueSize, findMaxCliqueContaining(linkNums, i, c));
+                int maxChanClqSize = Math.max(maxCliqueSize, 
+                                              findMaxCliqueContaining(linkNums, 
+                                                                      i, c));
                 linkThpt += path[i].channels[c] / maxChanClqSize;
             }
             testPathCS.throughput = Math.min(testPathCS.throughput, linkThpt);
         }
-
         return testPathCS.throughput;
-
     }
 }
