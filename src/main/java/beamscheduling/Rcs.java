@@ -42,6 +42,17 @@ public class Rcs {
         }
     }
 
+    public static Boolean inPath(Graph network, List<Edge> path, Vertex v) {
+        HashSet nodes = new HashSet();
+        for(Object obj: path) {
+            Edge e = (Edge)obj;
+            Pair<Vertex> ends = network.getEndpoints(e);
+            nodes.add((Vertex)ends.getFirst());
+            nodes.add((Vertex)ends.getSecond());
+        }
+        return nodes.contains(v);
+    }
+
     public static List<Edge> rcsPath(Graph network, Vertex src,
                                      Vertex dst, int consider) {
         ChannelSelection cs = new ChannelSelection((Network)network);
@@ -51,7 +62,7 @@ public class Rcs {
             Vertex v = (Vertex) o;
             v.intro = new HashMap();
             v.rcsPaths = new TreeMap();
-
+            v.channelAssignments = new HashMap();
         }
 
         for (Object o : network.getVertices()) {
@@ -67,6 +78,8 @@ public class Rcs {
                     if (e != null) {
                         p0.add(e);
                         double th = cs.selectChannels(p0);
+                        System.out.println("o: " + cs.optimalPathCS);
+                        v01.channelAssignments.put(p0, cs.optimalPathCS);
                         v01.rcsPaths.put(th, p0);
                         v01.intro.put(p0, -1);
                     }
@@ -88,10 +101,15 @@ public class Rcs {
                 if (v != src) {
                     for(Object c: u.rcsPaths.keySet()) {
                         ArrayList<Edge> opath = (ArrayList<Edge>)u.rcsPaths.get(c);
-                        if (opath.size() == (i - 1)) {
+                        if (opath.size() == (i - 1) && 
+                            ! inPath(network, opath, v)) {
                             path = (ArrayList<Edge>)opath.clone();
+                            ChannelSelection.PathCS pcs = (ChannelSelection.PathCS)u.channelAssignments.get(opath);
                             path.add(e);
-                            v.rcsPaths.put(cs.selectChannels((List<Edge>)path), path);
+                            v.rcsPaths.put(cs.greedySelectChannels(path, pcs), 
+                                           path);
+                            v.channelAssignments.put(path.clone(), 
+                                                     cs.optimalPathCS);
                             v.intro.put(path, i);
                             // If we added one and we're over, take one out
                             if(v.rcsPaths.keySet().size() > consider) {
@@ -107,10 +125,15 @@ public class Rcs {
                     for(Object c: v.rcsPaths.keySet()) {
                         double othpt = (Double)c;
                         ArrayList<Edge> opath = (ArrayList<Edge>)v.rcsPaths.get(c);
-                        if (opath.size() == (i - 1)) {
+                        if (opath.size() == (i - 1) &&
+                            ! inPath(network, opath, u)) {
                             path = (ArrayList<Edge>)opath.clone();
+                            ChannelSelection.PathCS pcs = (ChannelSelection.PathCS)u.channelAssignments.get(opath);
                             path.add(e);
-                            u.rcsPaths.put(cs.selectChannels((List<Edge>)path), path);
+                            u.rcsPaths.put(cs.greedySelectChannels(path, pcs), 
+                                           path);
+                            u.channelAssignments.put(path.clone(), 
+                                                     cs.optimalPathCS);
                             u.intro.put(path, i);
                             // If we added one and we're over, take one out
                             if(u.rcsPaths.keySet().size() > consider) {
@@ -122,6 +145,7 @@ public class Rcs {
                 }
             }
         }
+
         return((List<Edge>)dst.rcsPaths.get(dst.rcsPaths.lastKey()));
     }
     
@@ -291,7 +315,6 @@ public class Rcs {
                 rcsThpt[count] = cs.selectChannels(rcsPath);
 
                 primThpt[count] = cs.selectChannels(primpath);
-                //primThptGdyCS[count] = cs.greedySelectChannels(primpath);
 
                 sources[count] = source.id;
                 destinations[count] = destination.id;
