@@ -419,7 +419,7 @@ public class ChannelSelection {
     }
     
     // evaluate a path and channel selection (for RCS idea #2)
-    public double greedySelectChannels(List<Edge> pathList, PathCS testPathCS) {
+    public double evalPathCS(List<Edge> pathList, PathCS testPathCS) {
 
         pathLen = pathList.size();
         path = new Edge[pathLen];

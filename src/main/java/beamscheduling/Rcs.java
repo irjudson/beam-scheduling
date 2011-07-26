@@ -57,33 +57,16 @@ public class Rcs {
                                      Vertex dst, int consider) {
         ChannelSelection cs = new ChannelSelection((Network)network);
 
-        // Initialize all paths
+        // Initialize 
         for (Object o : network.getVertices()) {
             Vertex v = (Vertex) o;
             v.intro = new HashMap();
             v.rcsPaths = new TreeMap();
             v.channelAssignments = new HashMap();
-        }
-
-        for (Object o : network.getVertices()) {
-            Vertex v = (Vertex) o;
             if (v == src) {
                 ArrayList<Edge> p = new ArrayList<Edge>();
                 v.rcsPaths.put(0.0d, p);
                 v.intro.put(p, -1);
-                for(Object v0: network.getNeighbors(v)) {
-                    List<Edge> p0 = new ArrayList<Edge>();
-                    Vertex v01 = (Vertex)v0;
-                    Edge e = (Edge)network.findEdge(v, v0);
-                    if (e != null) {
-                        p0.add(e);
-                        double th = cs.selectChannels(p0);
-                        System.out.println("o: " + cs.optimalPathCS);
-                        v01.channelAssignments.put(p0, cs.optimalPathCS);
-                        v01.rcsPaths.put(th, p0);
-                        v01.intro.put(p0, -1);
-                    }
-                }
             }
         }
 
@@ -106,8 +89,7 @@ public class Rcs {
                             path = (ArrayList<Edge>)opath.clone();
                             ChannelSelection.PathCS pcs = (ChannelSelection.PathCS)u.channelAssignments.get(opath);
                             path.add(e);
-                            v.rcsPaths.put(cs.greedySelectChannels(path, pcs), 
-                                           path);
+                            v.rcsPaths.put(cs.evalPathCS(path, pcs), path);
                             v.channelAssignments.put(path.clone(), 
                                                      cs.optimalPathCS);
                             v.intro.put(path, i);
@@ -130,8 +112,7 @@ public class Rcs {
                             path = (ArrayList<Edge>)opath.clone();
                             ChannelSelection.PathCS pcs = (ChannelSelection.PathCS)u.channelAssignments.get(opath);
                             path.add(e);
-                            u.rcsPaths.put(cs.greedySelectChannels(path, pcs), 
-                                           path);
+                            u.rcsPaths.put(cs.evalPathCS(path, pcs), path);
                             u.channelAssignments.put(path.clone(), 
                                                      cs.optimalPathCS);
                             u.intro.put(path, i);
