@@ -362,7 +362,7 @@ public class ChannelSelection {
         for (int i = 1; i < pathLen; i++) {
             TreeSet<LinkChannel> removeSet = new TreeSet();
             for (LinkChannel lc : greedyPathCS.selected.get(i - 1)) {
-                LinkChannel newLc = new LinkChannel(i,lc.channel);
+                LinkChannel newLc = new LinkChannel(i, lc.channel);
                 removeSet.add(newLc);
             }
             TreeSet<LinkChannel> nextSet = (TreeSet<LinkChannel>) availPairs[i].clone();
@@ -422,6 +422,68 @@ public class ChannelSelection {
         //        System.out.println("Greedy channel selection: " + greedyPathCS.selected);
         //        System.out.println("Greedy CS throughput: " + greedyPathCS.throughput);
         return greedyPathCS.throughput;
+
+    }
+
+    
+    
+    // evaluate a path and channel selection (for RCS idea #2)
+    public double greedySelectChannels(List<Edge> pathList, PathCS testPathCS) {
+
+        pathLen = pathList.size();
+        path = new Edge[pathLen];
+        int a = 0;
+        for (Edge e : pathList) {
+            path[a] = e;
+            a++;
+        }
+
+
+        for (int i = 0; i < pathLen; i++) {
+            int maxCliqueSize = 1;
+            if (pathLen > 1) {
+                maxCliqueSize = 2;
+            }
+            // first check for size 3 cliques if i > 1
+            if (i > 1 && i < pathLen - 1) {
+                TreeSet<Integer> leftSide = new TreeSet();
+                for (LinkChannel lc : testPathCS.selected.get(i - 1)) {
+                    leftSide.add(new Integer(lc.channel));
+                }
+                TreeSet<Integer> rightSide = new TreeSet();
+                for (LinkChannel lc : testPathCS.selected.get(i + 1)) {
+                    rightSide.add(new Integer(lc.channel));
+                }
+                leftSide.retainAll(rightSide);
+                if (!leftSide.isEmpty()) {
+                    maxCliqueSize = 3;
+                }
+            }
+            // now check for channel cliques
+            double linkThpt = 0.0;
+            for (LinkChannel lc : testPathCS.selected.get(i)) {
+                int c = lc.channel;
+                ArrayList<Integer> linkNums = new ArrayList();
+                for (int j = 0; j < i; j++) {
+                    LinkChannel lcTest = new LinkChannel(j, c);
+                    if (testPathCS.selected.get(j).contains(lcTest)) {
+                        linkNums.add(j);
+                    }
+                }
+                linkNums.add(i);
+                for (int j = i + 1; j < pathLen; j++) {
+                    LinkChannel lcTest = new LinkChannel(j, c);
+                    if (testPathCS.selected.get(j).contains(lcTest)) {
+                        linkNums.add(j);
+                    }
+                }
+                int maxChanClqSize = Math.max(maxCliqueSize, findMaxCliqueContaining(linkNums, i, c));
+                linkThpt += path[i].channels[c] / maxChanClqSize;
+            }
+            testPathCS.throughput = Math.min(testPathCS.throughput, linkThpt);
+        }
+
+        return testPathCS.throughput;
 
     }
 }
