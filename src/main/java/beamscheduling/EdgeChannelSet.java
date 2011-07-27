@@ -4,9 +4,9 @@ import java.util.*;
 
 public class EdgeChannelSet {
     public Edge edge;
-    public Vector channels;
+    public Vector<Integer> channels;
     
-    public EdgeChannelSet(Edge e, Vector c) {
+    public EdgeChannelSet(Edge e, Vector<Integer> c) {
         this.edge = e;
         this.channels = c;
     }

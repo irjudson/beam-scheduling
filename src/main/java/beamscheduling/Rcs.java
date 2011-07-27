@@ -53,13 +53,13 @@ public class Rcs {
         return nodes.contains(v);
     }
 
-    public static void combinations(HashSet current, HashSet combos) {
+    public static void combinations(Vector<Integer> current, HashSet combos) {
         combos.add(current);
         for (Object o : current) {
-            HashSet next = (HashSet) current.clone();
+            Vector<Integer> next = (Vector<Integer>)current.clone();
             next.remove(o);
             if (!next.isEmpty()) {
-                combinations((HashSet) next.clone(), combos);
+                combinations((Vector<Integer>)next.clone(), combos);
             }
         }
     }
@@ -91,13 +91,14 @@ public class Rcs {
                 ArrayList<Edge> path = null;
                 HashSet<Integer> chset = new HashSet();
 
-                HashSet<Integer> cset = new HashSet();
+                Vector<Integer> cset = new Vector<Integer>();
                 for (int j = 0; j < e.channels.length; j++) {
                     if (e.channels[j] > 0.0d) {
                         cset.add(j);
                     }
                 }
                 combinations(cset, chset);
+
                 //System.out.println(chset);
 
                 // First direction
@@ -109,8 +110,8 @@ public class Rcs {
                             && !inPath(network, opath, v)) {
                         PathCS opathCS = opcs.pathCS;
 
-                        for (Object chanset : chset) {
-                            Vector<Integer> channels = new Vector(chset);
+                        for (Object chs : chset) {
+                            Vector<Integer> channels = (Vector<Integer>)chs;
                             path = (ArrayList<Edge>) opath.clone();
                             PathChannelSet npcs = new PathChannelSet(path);
                             npcs.path.add(new EdgeChannelSet(e, channels));
@@ -141,8 +142,8 @@ public class Rcs {
                     if (opath.size() == (i - 1)
                             && !inPath(network, opath, u)) {
                         PathCS opathCS = opcs.pathCS;
-                        for (Object chanset : chset) {
-                            Vector<Integer> channels = new Vector(chset);
+                        for (Object chs : chset) {
+                            Vector<Integer> channels = (Vector<Integer>)chs;
                             path = (ArrayList<Edge>) opath.clone();
                             PathChannelSet npcs = new PathChannelSet(path);
                             npcs.path.add(new EdgeChannelSet(e, channels));
