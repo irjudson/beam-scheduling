@@ -56,10 +56,10 @@ public class Rcs {
     public static void combinations(Vector<Integer> current, HashSet combos) {
         combos.add(current);
         for (Object o : current) {
-            Vector<Integer> next = (Vector<Integer>)current.clone();
+            Vector<Integer> next = (Vector<Integer>) current.clone();
             next.remove(o);
             if (!next.isEmpty()) {
-                combinations((Vector<Integer>)next.clone(), combos);
+                combinations((Vector<Integer>) next.clone(), combos);
             }
         }
     }
@@ -107,20 +107,20 @@ public class Rcs {
                 for (Object c : u.rcsPaths.keySet()) {
                     PathChannelSet opcs = (PathChannelSet) u.rcsPaths.get(c);
                     ArrayList<Edge> opath = opcs.getPath();
-                    if (opath.size() == (i - 1) && !inPath(network, opath, v)) {
+                    if (opath.size() == i && !inPath(network, opath, v)) {
                         PathCS opathCS = opcs.pathCS;
 
                         for (Object chs : chset) {
-                            Vector<Integer> channels = (Vector<Integer>)chs;
+                            Vector<Integer> channels = (Vector<Integer>) chs;
                             npath = (ArrayList<Edge>) opath.clone();
-                            npath.add(e);
                             PathChannelSet npcs = new PathChannelSet(npath);
+                            npath.add(e);
                             npcs.path.add(new EdgeChannelSet(e, channels));
                             npcs.pathCS = new PathCS();
                             npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
                             TreeSet<LinkChannel> nextChannelTS = new TreeSet();
                             for (int k = 0; k < channels.size(); k++) {
-                                nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(k)));
+                                nextChannelTS.add(new LinkChannel(npcs.path.size() - 1, channels.elementAt(k)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
                             double thpt = cs.evalPathCS(npath, npcs.pathCS);
@@ -137,19 +137,19 @@ public class Rcs {
                 for (Object c : v.rcsPaths.keySet()) {
                     PathChannelSet opcs = (PathChannelSet) v.rcsPaths.get(c);
                     ArrayList<Edge> opath = opcs.getPath();
-                    if (opath.size() == (i - 1) && !inPath(network, opath, u)) {
+                    if (opath.size() == i && !inPath(network, opath, u)) {
                         PathCS opathCS = opcs.pathCS;
                         for (Object chs : chset) {
-                            Vector<Integer> channels = (Vector<Integer>)chs;
+                            Vector<Integer> channels = (Vector<Integer>) chs;
                             npath = (ArrayList<Edge>) opath.clone();
-                            npath.add(e);
                             PathChannelSet npcs = new PathChannelSet(npath);
+                            npath.add(e);
                             npcs.path.add(new EdgeChannelSet(e, channels));
                             npcs.pathCS = new PathCS();
                             npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
                             TreeSet<LinkChannel> nextChannelTS = new TreeSet();
                             for (int k = 0; k < channels.size(); k++) {
-                                nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(k)));
+                                nextChannelTS.add(new LinkChannel(npcs.path.size() - 1, channels.elementAt(k)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
                             double thpt = cs.evalPathCS(npath, npcs.pathCS);
