@@ -74,7 +74,9 @@ public class Rcs {
             v.rcsPaths = new TreeMap();
             if (v == src) {
                 ArrayList<Edge> p = new ArrayList<Edge>();
-                v.rcsPaths.put(0.0d, new PathChannelSet(p));
+                PathChannelSet p0 = new PathChannelSet(p);
+                p0.pathCS = new PathCS();
+                v.rcsPaths.put(0.0d, p0);
             }
         }
 
@@ -89,7 +91,7 @@ public class Rcs {
                 Vertex u = (Vertex) ends.getFirst();
                 Vertex v = (Vertex) ends.getSecond();
                 ArrayList<Edge> path = null;
-                HashSet<Integer> chset = new HashSet();
+                HashSet<Vector<Integer>> chset = new HashSet<Vector<Integer>>();
 
                 Vector<Integer> cset = new Vector<Integer>();
                 for (int j = 0; j < e.channels.length; j++) {
@@ -102,12 +104,10 @@ public class Rcs {
                 //System.out.println(chset);
 
                 // First direction
-                //if (v != src) {
                 for (Object c : u.rcsPaths.keySet()) {
                     PathChannelSet opcs = (PathChannelSet) u.rcsPaths.get(c);
                     ArrayList<Edge> opath = opcs.getPath();
-                    if (opath.size() == (i - 1)
-                            && !inPath(network, opath, v)) {
+                    if (opath.size() == (i - 1) && !inPath(network, opath, v)) {
                         PathCS opathCS = opcs.pathCS;
 
                         for (Object chs : chset) {
@@ -123,7 +123,6 @@ public class Rcs {
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
                             double thpt = cs.evalPathCS(path, npcs.pathCS);
-                            //pcs.pcs = cs.optimalPathCS;
                             v.rcsPaths.put(thpt, npcs);
                             // If we added one and we're over, take one out
                             if (v.rcsPaths.keySet().size() > consider) {
@@ -132,15 +131,12 @@ public class Rcs {
                         }
                     }
                 }
-                //}
 
                 // Second direction
-                //if(u != src) {
                 for (Object c : v.rcsPaths.keySet()) {
                     PathChannelSet opcs = (PathChannelSet) v.rcsPaths.get(c);
                     ArrayList<Edge> opath = opcs.getPath();
-                    if (opath.size() == (i - 1)
-                            && !inPath(network, opath, u)) {
+                    if (opath.size() == (i - 1) && !inPath(network, opath, u)) {
                         PathCS opathCS = opcs.pathCS;
                         for (Object chs : chset) {
                             Vector<Integer> channels = (Vector<Integer>)chs;
@@ -155,7 +151,6 @@ public class Rcs {
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
                             double thpt = cs.evalPathCS(path, npcs.pathCS);
-                            //pcs.pcs = cs.optimalPathCS;
                             u.rcsPaths.put(thpt, npcs);
                             // If we added one and we're over, take one out
                             if (u.rcsPaths.keySet().size() > consider) {
@@ -164,7 +159,6 @@ public class Rcs {
                         }
                     }
                 }
-                //}
             }
         }
 
