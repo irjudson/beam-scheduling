@@ -53,6 +53,17 @@ public class Rcs {
         return nodes.contains(v);
     }
 
+    public static void combinations(HashSet current, HashSet combos) {
+        combos.add(current);
+        for (Object o: current) {
+            HashSet next = (HashSet)current.clone();
+            next.remove(o);
+            if(! next.isEmpty()) {
+                combinations((HashSet)next.clone(), combos);
+            }
+        }
+    }
+
     public static List<Edge> rcsPath(Graph network, Vertex src,
                                      Vertex dst, int consider) {
         ChannelSelection cs = new ChannelSelection((Network)network);
@@ -60,43 +71,54 @@ public class Rcs {
         // Initialize 
         for (Object o : network.getVertices()) {
             Vertex v = (Vertex) o;
-            v.intro = new HashMap();
             v.rcsPaths = new TreeMap();
-            v.channelAssignments = new HashMap();
             if (v == src) {
                 ArrayList<Edge> p = new ArrayList<Edge>();
-                v.rcsPaths.put(0.0d, p);
-                v.intro.put(p, -1);
+                v.rcsPaths.put(0.0d, new PathChannelSet(p));
             }
         }
 
         for(int i = 0; i < network.getVertexCount(); i++) {
-            //System.out.println("RCS Sweep: " + i + "/" + network.getVertexCount());
-            // For each edge see if we can extend the existing paths with it
+            // System.out.println("RCS Sweep: " + i 
+            //                    + "/" + network.getVertexCount());
+            // For each edge see if we can extend the existing path/channel sets
+            // with the available path/channel sets
             for(Object o: network.getEdges()) {
                 Edge e = (Edge)o;
                 Pair<Vertex> ends = network.getEndpoints(e);
                 Vertex u = (Vertex)ends.getFirst();
                 Vertex v = (Vertex)ends.getSecond();
                 ArrayList<Edge> path = null;
+                HashSet chset = new HashSet();
 
+                HashSet cset = new HashSet();
+                for(int j = 0; j < e.channels.length; j++) {
+                    if(e.channels[j] > 0.0d) {
+                        cset.add(j);
+                    }
+                }
+                combinations(cset, chset);
+
+                //System.out.println(chset);
+                
                 // First direction
                 if (v != src) {
                     for(Object c: u.rcsPaths.keySet()) {
-                        ArrayList<Edge> opath = (ArrayList<Edge>)u.rcsPaths.get(c);
+                        PathChannelSet pcs = (PathChannelSet)u.rcsPaths.get(c);
+                        ArrayList<Edge> opath = pcs.getPath();
                         if (opath.size() == (i - 1) && 
                             ! inPath(network, opath, v)) {
-                            path = (ArrayList<Edge>)opath.clone();
-                            ChannelSelection.PathCS pcs = (ChannelSelection.PathCS)u.channelAssignments.get(opath);
-                            path.add(e);
-                            v.rcsPaths.put(cs.evalPathCS(path, pcs), path);
-                            v.channelAssignments.put(path.clone(), 
-                                                     cs.optimalPathCS);
-                            v.intro.put(path, i);
-                            // If we added one and we're over, take one out
-                            if(v.rcsPaths.keySet().size() > consider) {
-                                v.intro.remove(v.rcsPaths.get(v.rcsPaths.firstKey()));
-                                v.rcsPaths.remove(v.rcsPaths.firstKey());
+                            for(Object chanset: chset) {
+                                path = (ArrayList<Edge>)opath.clone();
+                                path.add(e);
+                                // v.rcsPaths.put(cs.evalPathCS(path, pcs), path);
+                                // v.channelAssignments.put(path.clone(), 
+                                //                        cs.optimalPathCS);
+
+                                // If we added one and we're over, take one out
+                                if(v.rcsPaths.keySet().size() > consider) {
+                                    v.rcsPaths.remove(v.rcsPaths.firstKey());
+                                }
                             }
                         }
                     }
@@ -105,28 +127,31 @@ public class Rcs {
                 // Second direction
                 if(u != src) {
                     for(Object c: v.rcsPaths.keySet()) {
-                        double othpt = (Double)c;
-                        ArrayList<Edge> opath = (ArrayList<Edge>)v.rcsPaths.get(c);
+                        PathChannelSet pcs = (PathChannelSet)v.rcsPaths.get(c);
+                        ArrayList<Edge> opath = pcs.getPath();
                         if (opath.size() == (i - 1) &&
                             ! inPath(network, opath, u)) {
-                            path = (ArrayList<Edge>)opath.clone();
-                            ChannelSelection.PathCS pcs = (ChannelSelection.PathCS)u.channelAssignments.get(opath);
-                            path.add(e);
-                            u.rcsPaths.put(cs.evalPathCS(path, pcs), path);
-                            u.channelAssignments.put(path.clone(), 
-                                                     cs.optimalPathCS);
-                            u.intro.put(path, i);
-                            // If we added one and we're over, take one out
-                            if(u.rcsPaths.keySet().size() > consider) {
-                                u.intro.remove(u.rcsPaths.get(u.rcsPaths.firstKey()));
-                                u.rcsPaths.remove(u.rcsPaths.firstKey());
+                            for(Object chanset: chset) {
+                                path = (ArrayList<Edge>)opath.clone();
+                                path.add(e);
+                                //u.rcsPaths.put(cs.evalPathCS(path, pcs), path);
+                                //u.channelAssignments.put(path.clone(), 
+                                //                     cs.optimalPathCS);
+                                // If we added one and we're over, take one out
+                                if(u.rcsPaths.keySet().size() > consider) {
+                                    u.rcsPaths.remove(u.rcsPaths.firstKey());
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
+        
+        if(dst.rcsPaths.size() == 0) {
+            System.out.println("Didn't find RCS Path.");
+            System.exit(0);
+        } 
         return((List<Edge>)dst.rcsPaths.get(dst.rcsPaths.lastKey()));
     }
     

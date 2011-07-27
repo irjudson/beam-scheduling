@@ -32,7 +32,6 @@ public class Vertex implements Comparable {
     public Integer interferenceChannel;
     public Boolean isMarked = false;
     public TreeMap rcsPaths;  
-    public HashMap channelAssignments;
     public HashMap intro;
 
     public int compareTo(Object otherVertex) throws ClassCastException {
