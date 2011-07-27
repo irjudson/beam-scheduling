@@ -90,7 +90,7 @@ public class Rcs {
                 Pair<Vertex> ends = network.getEndpoints(e);
                 Vertex u = (Vertex) ends.getFirst();
                 Vertex v = (Vertex) ends.getSecond();
-                ArrayList<Edge> path = null;
+                ArrayList<Edge> npath = null;
                 HashSet<Vector<Integer>> chset = new HashSet<Vector<Integer>>();
 
                 Vector<Integer> cset = new Vector<Integer>();
@@ -112,8 +112,9 @@ public class Rcs {
 
                         for (Object chs : chset) {
                             Vector<Integer> channels = (Vector<Integer>)chs;
-                            path = (ArrayList<Edge>) opath.clone();
-                            PathChannelSet npcs = new PathChannelSet(path);
+                            npath = (ArrayList<Edge>) opath.clone();
+                            npath.add(e);
+                            PathChannelSet npcs = new PathChannelSet(npath);
                             npcs.path.add(new EdgeChannelSet(e, channels));
                             npcs.pathCS = new PathCS();
                             npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
@@ -122,7 +123,7 @@ public class Rcs {
                                 nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(k)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
-                            double thpt = cs.evalPathCS(path, npcs.pathCS);
+                            double thpt = cs.evalPathCS(npath, npcs.pathCS);
                             v.rcsPaths.put(thpt, npcs);
                             // If we added one and we're over, take one out
                             if (v.rcsPaths.keySet().size() > consider) {
@@ -140,8 +141,9 @@ public class Rcs {
                         PathCS opathCS = opcs.pathCS;
                         for (Object chs : chset) {
                             Vector<Integer> channels = (Vector<Integer>)chs;
-                            path = (ArrayList<Edge>) opath.clone();
-                            PathChannelSet npcs = new PathChannelSet(path);
+                            npath = (ArrayList<Edge>) opath.clone();
+                            npath.add(e);
+                            PathChannelSet npcs = new PathChannelSet(npath);
                             npcs.path.add(new EdgeChannelSet(e, channels));
                             npcs.pathCS = new PathCS();
                             npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
@@ -150,7 +152,7 @@ public class Rcs {
                                 nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(k)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
-                            double thpt = cs.evalPathCS(path, npcs.pathCS);
+                            double thpt = cs.evalPathCS(npath, npcs.pathCS);
                             u.rcsPaths.put(thpt, npcs);
                             // If we added one and we're over, take one out
                             if (u.rcsPaths.keySet().size() > consider) {

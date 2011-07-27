@@ -429,6 +429,10 @@ public class ChannelSelection {
             testPathCS.throughput = Math.min(testPathCS.throughput, linkThpt);
         }
         this.optimalPathCS = testPathCS;
+        
+        
+        //System.out.println("evaluated " + pathList + " cs " + testPathCS);
+        
         return testPathCS.throughput;
     }
 }
@@ -443,9 +447,10 @@ class LinkChannel implements Comparable<LinkChannel> {
         channel = c;
     }
 
-//        public String toString() {
-//            return "(" + path[pathLinkIndex].id + "," + channel + ")";
-//        }
+    public String toString() {
+        return "(" + pathLinkIndex + "," + channel + ")";
+    }
+
     public int compareTo(LinkChannel other) {
         if (pathLinkIndex == other.pathLinkIndex) {
             return (channel - other.channel);
