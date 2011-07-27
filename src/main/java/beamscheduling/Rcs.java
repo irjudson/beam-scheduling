@@ -98,7 +98,6 @@ public class Rcs {
                     }
                 }
                 combinations(cset, chset);
-
                 //System.out.println(chset);
                 
                 // First direction
