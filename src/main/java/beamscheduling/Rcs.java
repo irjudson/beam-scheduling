@@ -73,9 +73,7 @@ public class Rcs {
             Vertex v = (Vertex) o;
             v.rcsPaths = new TreeMap();
             if (v == src) {
-                ArrayList<Edge> p = new ArrayList<Edge>();
-                PathChannelSet p0 = new PathChannelSet(p);
-                p0.pathCS = new PathCS();
+                PathChannelSet p0 = new PathChannelSet();
                 v.rcsPaths.put(0.0d, p0);
             }
         }
@@ -90,7 +88,7 @@ public class Rcs {
                 Pair<Vertex> ends = network.getEndpoints(e);
                 Vertex u = (Vertex) ends.getFirst();
                 Vertex v = (Vertex) ends.getSecond();
-                ArrayList<Edge> npath = null;
+                //ArrayList<Edge> npath = null;
                 HashSet<Vector<Integer>> chset = new HashSet<Vector<Integer>>();
 
                 Vector<Integer> cset = new Vector<Integer>();
@@ -112,18 +110,14 @@ public class Rcs {
 
                         for (Object chs : chset) {
                             Vector<Integer> channels = (Vector<Integer>) chs;
-                            npath = (ArrayList<Edge>) opath.clone();
-                            PathChannelSet npcs = new PathChannelSet(npath);
-                            npath.add(e);
-                            npcs.path.add(new EdgeChannelSet(e, channels));
-                            npcs.pathCS = new PathCS();
-                            npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
+                            PathChannelSet npcs = new PathChannelSet(opcs);
+                            npcs.path.add(e);
                             TreeSet<LinkChannel> nextChannelTS = new TreeSet();
                             for (int k = 0; k < channels.size(); k++) {
                                 nextChannelTS.add(new LinkChannel(npcs.path.size() - 1, channels.elementAt(k)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
-                            double thpt = cs.evalPathCS(npath, npcs.pathCS);
+                            double thpt = cs.evalPathCS(npcs.path, npcs.pathCS);
                             v.rcsPaths.put(thpt, npcs);
                             System.out.println("T: " + thpt + " Path: " + npcs);
                             // If we added one and we're over, take one out
@@ -142,20 +136,16 @@ public class Rcs {
                         PathCS opathCS = opcs.pathCS;
                         for (Object chs : chset) {
                             Vector<Integer> channels = (Vector<Integer>) chs;
-                            npath = (ArrayList<Edge>) opath.clone();
-                            PathChannelSet npcs = new PathChannelSet(npath);
-                            npath.add(e);
-                            npcs.path.add(new EdgeChannelSet(e, channels));
-                            npcs.pathCS = new PathCS();
-                            npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
+                            PathChannelSet npcs = new PathChannelSet(opcs);
+                            npcs.path.add(e);
                             TreeSet<LinkChannel> nextChannelTS = new TreeSet();
                             for (int k = 0; k < channels.size(); k++) {
                                 nextChannelTS.add(new LinkChannel(npcs.path.size() - 1, channels.elementAt(k)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
-                            double thpt = cs.evalPathCS(npath, npcs.pathCS);
+                            double thpt = cs.evalPathCS(npcs.path, npcs.pathCS);
+                            v.rcsPaths.put(thpt, npcs);
                             System.out.println("T: " + thpt + " Path: " + npcs);
-                            u.rcsPaths.put(thpt, npcs);
                             // If we added one and we're over, take one out
                             if (u.rcsPaths.keySet().size() > consider) {
                                 u.rcsPaths.remove(u.rcsPaths.firstKey());
