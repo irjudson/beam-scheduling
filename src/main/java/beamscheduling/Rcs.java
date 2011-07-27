@@ -118,12 +118,12 @@ public class Rcs {
                             npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
                             TreeSet<LinkChannel> nextChannelTS = new TreeSet();
                             for (int k = 0; k < channels.size(); k++) {
-                                nextChannelTS.add(new LinkChannel(opcs.path.size()-1, channels.elementAt(i)));
+                                nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(i)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
-                            double thpt = cs.evalPathCS(path, opcs.pathCS);
+                            double thpt = cs.evalPathCS(path, npcs.pathCS);
                             //pcs.pcs = cs.optimalPathCS;
-                            v.rcsPaths.put(thpt, opcs);
+                            v.rcsPaths.put(thpt, npcs);
                             // If we added one and we're over, take one out
                             if (v.rcsPaths.keySet().size() > consider) {
                                 v.rcsPaths.remove(v.rcsPaths.firstKey());
@@ -141,7 +141,6 @@ public class Rcs {
                     if (opath.size() == (i - 1)
                             && !inPath(network, opath, u)) {
                         PathCS opathCS = opcs.pathCS;
-
                         for (Object chanset : chset) {
                             Vector<Integer> channels = new Vector(chset);
                             path = (ArrayList<Edge>) opath.clone();
@@ -151,12 +150,12 @@ public class Rcs {
                             npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
                             TreeSet<LinkChannel> nextChannelTS = new TreeSet();
                             for (int k = 0; k < channels.size(); k++) {
-                                nextChannelTS.add(new LinkChannel(opcs.path.size()-1, channels.elementAt(i)));
+                                nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(i)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
-                            double thpt = cs.evalPathCS(path, opcs.pathCS);
+                            double thpt = cs.evalPathCS(path, npcs.pathCS);
                             //pcs.pcs = cs.optimalPathCS;
-                            u.rcsPaths.put(thpt, opcs);
+                            u.rcsPaths.put(thpt, npcs);
                             // If we added one and we're over, take one out
                             if (u.rcsPaths.keySet().size() > consider) {
                                 u.rcsPaths.remove(u.rcsPaths.firstKey());
