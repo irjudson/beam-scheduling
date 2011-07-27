@@ -22,10 +22,8 @@ public class ChannelSelection {
     // bridging sets
     TreeSet<LinkChannel>[] bridgingSet;
     int[] numBridgingSubsets;
-
     // Optimal
     public PathCS optimalPathCS;
-
     // best PathCS
     PathCS[][] bestPathCS; // bestPathCS[i][k] = best PathCS for 1,..,i given kth bridging set
 
@@ -94,7 +92,9 @@ public class ChannelSelection {
     }
 
     public double selectChannels(List<Edge> pathList) {
-        if (pathList.isEmpty()) { return 0.0; }
+        if (pathList.isEmpty()) {
+            return 0.0;
+        }
         pathLen = pathList.size();
         path = new Edge[pathLen];
         int a = 0;
@@ -180,8 +180,8 @@ public class ChannelSelection {
             testPathCS.selected.add(nextBridgeSubsetCopy);
 
             evaluateLast(testPathCS, empty);
-            if (optPathCS == null 
-                || testPathCS.throughput > optPathCS.throughput) {
+            if (optPathCS == null
+                    || testPathCS.throughput > optPathCS.throughput) {
                 optPathCS = testPathCS;
             }
         }
@@ -257,24 +257,24 @@ public class ChannelSelection {
                     linkNums.add(lcb.pathLinkIndex);
                 }
             }
-            int maxChanClqSize = Math.max(maxCliqueSize, 
-                                          findMaxCliqueContaining(linkNums, 
-                                                                  i, c));
+            int maxChanClqSize = Math.max(maxCliqueSize,
+                    findMaxCliqueContaining(linkNums,
+                    i, c));
             linkThpt += path[i].channels[c] / maxChanClqSize;
         }
         pathCS.throughput = Math.min(pathCS.throughput, linkThpt);
     }
 
-    int findMaxCliqueContaining(ArrayList<Integer> linkNums, int loc, 
-                                int channel) {
+    int findMaxCliqueContaining(ArrayList<Integer> linkNums, int loc,
+            int channel) {
         // assumes interval graph
         int maxSize = 0;
         int i = 0;
         while (i < linkNums.size()) {
             int j = i + 1;
-            while (j < linkNums.size() 
-                   && checkPathInterference(channel, linkNums.get(i), 
-                                            linkNums.get(j))) {
+            while (j < linkNums.size()
+                    && checkPathInterference(channel, linkNums.get(i),
+                    linkNums.get(j))) {
                 j++;
             }
             int size = j - i;
@@ -284,57 +284,6 @@ public class ChannelSelection {
             i++;
         }
         return maxSize;
-    }
-
-    class LinkChannel implements Comparable<LinkChannel> {
-        int pathLinkIndex;
-        int channel;
-
-        LinkChannel(int index, int c) {
-            pathLinkIndex = index;
-            channel = c;
-        }
-
-        public String toString() {
-            return "(" + path[pathLinkIndex].id + "," + channel + ")";
-        }
-
-        public int compareTo(LinkChannel other) {
-            if (pathLinkIndex == other.pathLinkIndex) {
-                return (channel - other.channel);
-            } else {
-                return (pathLinkIndex - other.pathLinkIndex);
-            }
-        }
-    }
-
-    class PathCS {
-        ArrayList<TreeSet<LinkChannel>> selected;
-        double throughput;
-
-        PathCS() {
-            selected = new ArrayList<TreeSet<LinkChannel>>();
-            throughput = Double.MAX_VALUE; // initial unlimited before using any links
-        }
-
-        public String toString() {
-            String out = new String();
-            out += "/"+throughput+"/ ";
-            for(Object o: selected) {
-                for(Object o2: (TreeSet)o) {
-                    out += " [" + (LinkChannel)o2 + " ]";
-                }
-            }
-            return(out);
-        }
-
-        void print() {
-            for (TreeSet<LinkChannel> ts : selected) {
-                for (LinkChannel lc : ts) {
-                    System.out.println(lc);
-                }
-            }
-        }
     }
 
     // simple greedy method
@@ -407,17 +356,17 @@ public class ChannelSelection {
                         linkNums.add(j);
                     }
                 }
-                int maxChanClqSize = Math.max(maxCliqueSize, 
-                                              findMaxCliqueContaining(linkNums, 
-                                                                      i, c));
+                int maxChanClqSize = Math.max(maxCliqueSize,
+                        findMaxCliqueContaining(linkNums,
+                        i, c));
                 linkThpt += path[i].channels[c] / maxChanClqSize;
             }
-            greedyPathCS.throughput = Math.min(greedyPathCS.throughput, 
-                                               linkThpt);
+            greedyPathCS.throughput = Math.min(greedyPathCS.throughput,
+                    linkThpt);
         }
         return greedyPathCS.throughput;
     }
-    
+
     // evaluate a path and channel selection (for RCS idea #2)
     public double evalPathCS(List<Edge> pathList, PathCS testPathCS) {
 
@@ -472,14 +421,66 @@ public class ChannelSelection {
                         linkNums.add(j);
                     }
                 }
-                int maxChanClqSize = Math.max(maxCliqueSize, 
-                                              findMaxCliqueContaining(linkNums, 
-                                                                      i, c));
+                int maxChanClqSize = Math.max(maxCliqueSize,
+                        findMaxCliqueContaining(linkNums,
+                        i, c));
                 linkThpt += path[i].channels[c] / maxChanClqSize;
             }
             testPathCS.throughput = Math.min(testPathCS.throughput, linkThpt);
         }
         this.optimalPathCS = testPathCS;
         return testPathCS.throughput;
+    }
+}
+
+class LinkChannel implements Comparable<LinkChannel> {
+
+    int pathLinkIndex;
+    int channel;
+
+    LinkChannel(int index, int c) {
+        pathLinkIndex = index;
+        channel = c;
+    }
+
+//        public String toString() {
+//            return "(" + path[pathLinkIndex].id + "," + channel + ")";
+//        }
+    public int compareTo(LinkChannel other) {
+        if (pathLinkIndex == other.pathLinkIndex) {
+            return (channel - other.channel);
+        } else {
+            return (pathLinkIndex - other.pathLinkIndex);
+        }
+    }
+}
+
+class PathCS {
+
+    ArrayList<TreeSet<LinkChannel>> selected;
+    double throughput;
+
+    PathCS() {
+        selected = new ArrayList<TreeSet<LinkChannel>>();
+        throughput = Double.MAX_VALUE; // initial unlimited before using any links
+    }
+
+    public String toString() {
+        String out = new String();
+        out += "/" + throughput + "/ ";
+        for (Object o : selected) {
+            for (Object o2 : (TreeSet) o) {
+                out += " [" + (LinkChannel) o2 + " ]";
+            }
+        }
+        return (out);
+    }
+
+    void print() {
+        for (TreeSet<LinkChannel> ts : selected) {
+            for (LinkChannel lc : ts) {
+                System.out.println(lc);
+            }
+        }
     }
 }

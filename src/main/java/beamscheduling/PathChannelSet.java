@@ -4,8 +4,13 @@ import java.util.*;
 
 public class PathChannelSet {
     public ArrayList<EdgeChannelSet> path;
-    public ChannelSelection.PathCS pcs;
+    public PathCS pathCS;
 
+    public PathChannelSet() {
+        this.path = null;
+        this.pathCS = null;
+    }
+    
     public PathChannelSet(ArrayList<Edge> p) {
         this.path = new ArrayList<EdgeChannelSet>();
         for(Object o: p) {
