@@ -22,6 +22,7 @@ public class PathChannelSet {
         String out = "";
         for(Object o: path) {
             out += ((EdgeChannelSet)o).toString();
+            out += ", ";
         }
         return(out);
     }

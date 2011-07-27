@@ -125,6 +125,7 @@ public class Rcs {
                             npcs.pathCS.selected.add(nextChannelTS);
                             double thpt = cs.evalPathCS(npath, npcs.pathCS);
                             v.rcsPaths.put(thpt, npcs);
+                            System.out.println("T: " + thpt + " Path: " + npcs);
                             // If we added one and we're over, take one out
                             if (v.rcsPaths.keySet().size() > consider) {
                                 v.rcsPaths.remove(v.rcsPaths.firstKey());
@@ -153,6 +154,7 @@ public class Rcs {
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
                             double thpt = cs.evalPathCS(npath, npcs.pathCS);
+                            System.out.println("T: " + thpt + " Path: " + npcs);
                             u.rcsPaths.put(thpt, npcs);
                             // If we added one and we're over, take one out
                             if (u.rcsPaths.keySet().size() > consider) {
