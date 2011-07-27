@@ -44,5 +44,5 @@ public class RcsOptions {
 
   @Option(name = "-r", aliases = {"--rcs"}, metaVar = "RCS",
           usage = "Consider the best N paths in RCS calcuations.")
-    public Integer consider = 10;
+    public Integer consider = 50;
 }
