@@ -119,7 +119,7 @@ public class Rcs {
                             npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
                             TreeSet<LinkChannel> nextChannelTS = new TreeSet();
                             for (int k = 0; k < channels.size(); k++) {
-                                nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(i)));
+                                nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(k)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
                             double thpt = cs.evalPathCS(path, npcs.pathCS);
@@ -147,7 +147,7 @@ public class Rcs {
                             npcs.pathCS.selected = (ArrayList<TreeSet<LinkChannel>>) opathCS.selected.clone();
                             TreeSet<LinkChannel> nextChannelTS = new TreeSet();
                             for (int k = 0; k < channels.size(); k++) {
-                                nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(i)));
+                                nextChannelTS.add(new LinkChannel(npcs.path.size()-1, channels.elementAt(k)));
                             }
                             npcs.pathCS.selected.add(nextChannelTS);
                             double thpt = cs.evalPathCS(path, npcs.pathCS);
