@@ -108,12 +108,12 @@ public class Rcs {
                         if (opath.size() == (i - 1) && 
                             ! inPath(network, opath, v)) {
                             for(Object chanset: chset) {
+                                Vector channels = new Vector(chset);
                                 path = (ArrayList<Edge>)opath.clone();
-                                path.add(e);
-                                // v.rcsPaths.put(cs.evalPathCS(path, pcs), path);
-                                // v.channelAssignments.put(path.clone(), 
-                                //                        cs.optimalPathCS);
-
+                                pcs.path.add(new EdgeChannelSet(e, channels));
+                                double thpt = cs.evalPathCS(path, pcs.pcs);
+                                pcs.pcs = cs.optimalPathCS;
+                                v.rcsPaths.put(thpt, pcs);
                                 // If we added one and we're over, take one out
                                 if(v.rcsPaths.keySet().size() > consider) {
                                     v.rcsPaths.remove(v.rcsPaths.firstKey());
@@ -131,11 +131,12 @@ public class Rcs {
                         if (opath.size() == (i - 1) &&
                             ! inPath(network, opath, u)) {
                             for(Object chanset: chset) {
+                                Vector channels = new Vector(chset);
                                 path = (ArrayList<Edge>)opath.clone();
-                                path.add(e);
-                                //u.rcsPaths.put(cs.evalPathCS(path, pcs), path);
-                                //u.channelAssignments.put(path.clone(), 
-                                //                     cs.optimalPathCS);
+                                pcs.path.add(new EdgeChannelSet(e, channels));
+                                double thpt = cs.evalPathCS(path, pcs.pcs);
+                                pcs.pcs = cs.optimalPathCS;
+                                u.rcsPaths.put(thpt, pcs);
                                 // If we added one and we're over, take one out
                                 if(u.rcsPaths.keySet().size() > consider) {
                                     u.rcsPaths.remove(u.rcsPaths.firstKey());
@@ -149,9 +150,10 @@ public class Rcs {
         
         if(dst.rcsPaths.size() == 0) {
             System.out.println("Didn't find RCS Path.");
-            System.exit(0);
+            return(null);
         } 
-        return((List<Edge>)dst.rcsPaths.get(dst.rcsPaths.lastKey()));
+
+        return(((PathChannelSet)dst.rcsPaths.get(dst.rcsPaths.lastKey())).getPath());
     }
     
     public static void main(String[] args) {

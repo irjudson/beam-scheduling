@@ -24,7 +24,7 @@ public class ChannelSelection {
     int[] numBridgingSubsets;
 
     // Optimal
-    PathCS optimalPathCS;
+    public PathCS optimalPathCS;
 
     // best PathCS
     PathCS[][] bestPathCS; // bestPathCS[i][k] = best PathCS for 1,..,i given kth bridging set
@@ -429,8 +429,6 @@ public class ChannelSelection {
             a++;
         }
 
-        System.out.println("Path: " + pathList + " TPCS: " + testPathCS);
-
         if (testPathCS == null) {
             testPathCS = new PathCS();
         }
@@ -481,6 +479,7 @@ public class ChannelSelection {
             }
             testPathCS.throughput = Math.min(testPathCS.throughput, linkThpt);
         }
+        this.optimalPathCS = testPathCS;
         return testPathCS.throughput;
     }
 }
