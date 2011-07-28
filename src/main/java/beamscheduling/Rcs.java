@@ -277,10 +277,11 @@ public class Rcs {
             if (dpath.size() == 0) {
                 continue;
             } else {
-                System.out.println("[" + count + "] Dijkstra Path: " + dpath.toString());
-                for (Edge e : dpath) {
-                    e.type = 1;
-                }
+		if (options.verbose) {
+		    System.out.println("[" + count + "] Dijkstra Path: " + 
+				       dpath.toString());
+		}
+                for (Edge e : dpath) { e.type = 1; }
 
                 try {
                     cs = new ChannelSelection(network);
@@ -314,9 +315,10 @@ public class Rcs {
                 for (Edge e : primpath) {
                     e.type = 4;
                 }
-                System.out.println("[" + count + "] Prim Path: "
-                        + primpath.toString());
-
+		if (options.verbose) {
+		    System.out.println("[" + count + "] Prim Path: "
+				       + primpath.toString());
+		}
 
                 // RCS
                 List<Edge> rcsPath = rcsPath(network, source, destination,
@@ -324,8 +326,10 @@ public class Rcs {
                 if (rcsPath == null) {
                     rcsPath = new ArrayList<Edge>();
                 }
-                System.out.println("[" + count + "] RCS Path: "
-                        + rcsPath.toString());
+		if (options.verbose) {
+		    System.out.println("[" + count + "] RCS Path: "
+				       + rcsPath.toString());
+		}
 
                 for (Edge e : rcsPath) {
                     e.type = 5;

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 #
-import csv, math
+import csv, math, sys
 import simplestats
 import pprint
 from collections import defaultdict
@@ -15,9 +15,10 @@ class rdefaultdict(object):
         return self.__dd.__getitem__(*args) 
     def __setitem__(self,*args):
         return self.__dd.__setitem__(*args)
-        
+
+filename = sys.argv[1]
 data = rdefaultdict()
-data_reader = csv.reader(open('rcs-final/output.clean.csv', 'r'))
+data_reader = csv.reader(open(filename, 'r'))
 
 for row in data_reader:
     seed, iter, width, height, nodes, users, channels, source, dest, dijkstra, prim, rcs = row
