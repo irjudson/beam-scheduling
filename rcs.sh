@@ -55,8 +55,8 @@ fi
 
 # Scenario 3: vary node density
 # Width/Height: 50
-# Nodes 9 16 25 36 49 64
-for i in 9 16 25 36 49 64; do
+# Nodes 9 16 25 36 49 
+for i in 9 16 25 36 49; do
     OUTFILE="rcs-density-${i}.csv"
     if [ ! -f $OUTFILE ]; then 
     echo "Running test for ${i} channels"

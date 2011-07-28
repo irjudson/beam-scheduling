@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 #
-import csv
+import csv, math
 import simplestats
 import pprint
 from collections import defaultdict
@@ -17,7 +17,7 @@ class rdefaultdict(object):
         return self.__dd.__setitem__(*args)
         
 data = rdefaultdict()
-data_reader = csv.reader(open('output.clean.csv', 'r'))
+data_reader = csv.reader(open('rcs-final/output.clean.csv', 'r'))
 
 for row in data_reader:
     seed, iter, width, height, nodes, users, channels, source, dest, dijkstra, prim, rcs = row
@@ -37,44 +37,38 @@ for row in data_reader:
     prim = float(prim)
     rcs = float(rcs)
 
-    if data[width][nodes][users][ch].has_key('dijkstra'):
-        data[width][nodes][users][ch]['dijkstra'].append(dijkstra)
+    if data[width][nodes][ch].has_key('dijkstra'):
+        data[width][nodes][ch]['dijkstra'].append(dijkstra)
     else:
-        data[width][nodes][users][ch]['dijkstra'] = [dijkstra]
+        data[width][nodes][ch]['dijkstra'] = [dijkstra]
 
-    if data[width][nodes][users][ch].has_key('prim'):
-        data[width][nodes][users][ch]['prim'].append(prim)
+    if data[width][nodes][ch].has_key('prim'):
+        data[width][nodes][ch]['prim'].append(prim)
     else:
-        data[width][nodes][users][ch]['prim'] = [prim]
+        data[width][nodes][ch]['prim'] = [prim]
 
-    if data[width][nodes][users][ch].has_key('rcs'):
-        data[width][nodes][users][ch]['rcs'].append(rcs)
+    if data[width][nodes][ch].has_key('rcs'):
+        data[width][nodes][ch]['rcs'].append(rcs)
     else:
-        data[width][nodes][users][ch]['rcs'] = [rcs]
+        data[width][nodes][ch]['rcs'] = [rcs]
 
 for width in sorted(data.keys()):
-    for theta in sorted(data[width].keys()):
-        for relay in sorted(data[width][theta].keys()):
-            for subs in sorted(data[width][theta][relay].keys()):
-                for mq in sorted(data[width][theta][relay][subs].keys()):
-                    for ch in sorted(data[width][theta][relay][subs][mq].keys()):
-                        rd = data[width][theta][relay][subs][mq][ch]
-                        lilp = len(rd['dijkstra'])
-                        lr1 = len(rd['r1'])
-                        lr2 = len(rd['r2'])
-                        rd['dijkstra'] = simplestats.mean(rd['dijkstra'])
-                        rd['r1'] = simplestats.mean(rd['r1'])
-                        rd['r2'] = simplestats.mean(rd['r2'])
-
-# Scenario 1: vary # of subscribers in {20, 30, 40, 50, 60}
-d = data[40000.0][40][4]
-ilp = []
-r1 = []
-r2 = []
-for subs in sorted(d.keys()):
-    ilp.append(str(d[subs][40000.0][4]['ilp'] / 1000000))
-    r1.append(str(d[subs][40000.0][4]['r1'] / 1000000))
-    r2.append(str(d[subs][40000.0][4]['r2'] / 1000000))
+    for nodes in sorted(data[width].keys()):
+        for channels in sorted(data[width][nodes].keys()):
+            rd = data[width][nodes][channels]
+            rd['dijkstra'] = simplestats.mean(rd['dijkstra'])
+            rd['prim'] = simplestats.mean(rd['prim'])
+            rd['rcs'] = simplestats.mean(rd['rcs'])
+            
+# Scenario 1: vary # of channels in {1, 2, 3, 4, 5}
+d = data[50000.0][25]
+dij = []
+pri = []
+rcs = []
+for channels in sorted(d.keys()):
+    dij.append(str(d[channels]['dijkstra'] / 1000000))
+    pri.append(str(d[channels]['prim'] / 1000000))
+    rcs.append(str(d[channels]['rcs'] / 1000000))
     
 print("""
 figure(1);
@@ -83,33 +77,40 @@ set(1, \"defaultaxesfontname\", \"Times-Roman\");
 set(1, \"defaulttextfontsize\", 19);
 set(1, \"defaultaxesfontsize\", 19);
 
-X = [ %(idx)s ];
-OPT = [ %(ilp)s ];
-R1 = [ %(r1)s ];
-R2 = [ %(r2)s ];
+X = %(idx)s;
+OPT = [ %(dijkstra)s ];
+R1 = [ %(prim)s ];
+R2 = [ %(rcs)s ];
 
 plot(X,OPT,'--og ','LineWidth',3);
 hold on;
 plot(X,R1,':*b','LineWidth',3);
 plot(X,R2,'-.sc','LineWidth',3);
 
-xlabel('Number of Subscribers');
-ylabel('kb^2');
-legend('Optimal','Greedy #1','Greedy #2', \"Location\", \"SouthEast\")
+xlabel('Number of Channels per Band');
+ylabel('Average Throughput (kb^2)');
+legend('CS-ShortestPath','RCS-Bottleneck','RCS-PathExtend', \"Location\", \"SouthEast\")
 set(gca, 'XTickMode', 'manual', 'XTick', X);
+axis([X(1), X(length(X))]);
+replot;
 fixAxes;
 hold off;
-""" % {'idx' : sorted(d.keys()), 'ilp' : ", ".join(ilp), 'r1' : ", ".join(r1), 'r2' : ", ".join(r2)})
+""" % {'idx' : sorted(d.keys()), 'dijkstra' : ", ".join(dij), 'prim' : ", ".join(pri), 'rcs' : ", ".join(rcs)})
 
-# Scenario 2: vary # of relays in {6, 8, 10, 12, 14}
-d = data[40000.0][40]
-ilp = []
-r1 = []
-r2 = []
-for relays in sorted(d.keys()):
-    ilp.append(str(d[relays][40][40000.0][4]['ilp'] / 1000000))
-    r1.append(str(d[relays][40][40000.0][4]['r1'] / 1000000))
-    r2.append(str(d[relays][40][40000.0][4]['r2'] / 1000000))
+# Scenario 2: vary size keeping density constant
+d = data
+dij = []
+pri = []
+rcs = []
+idx = [3, 4, 5, 6, 7]
+for width in idx:
+    nodes = math.pow(width, 2)
+    width = width * 10000.0
+    dij.append(str(d[width][nodes][3]['dijkstra'] / 1000000))
+    pri.append(str(d[width][nodes][3]['prim'] / 1000000))
+    rcs.append(str(d[width][nodes][3]['rcs'] / 1000000))
+
+idx = [int(math.pow(x,2)) for x in idx]
 
 print("""
 figure(2);
@@ -118,33 +119,37 @@ set(2, \"defaultaxesfontname\", \"Times-Roman\");
 set(2, \"defaulttextfontsize\", 19);
 set(2, \"defaultaxesfontsize\", 19);
 
-X = [ %(idx)s ];
-OPT = [ %(ilp)s ];
-R1 = [ %(r1)s ];
-R2 = [ %(r2)s ];
+X = %(idx)s;
+OPT = [ %(dij)s ];
+R1 = [ %(pri)s ];
+R2 = [ %(rcs)s ];
 
 plot(X,OPT,'--og ','LineWidth',3);
 hold on;
 plot(X,R1,':*b','LineWidth',3);
 plot(X,R2,'-.sc','LineWidth',3);
 
-xlabel('Number of Relays');
-ylabel('kb^2');
-legend('Optimal','Greedy #1','Greedy #2', \"Location\", \"SouthEast\")
+xlabel('Network Area (km^2)');
+ylabel('Average Throughput (kb^2)');
+legend('CS-ShortestPath','RCS-Bottleneck','RCS-PathExtend', \"Location\", \"NorthEast\")
 set(gca, 'XTickMode', 'manual', 'XTick', X);
+axis([X(1), X(length(X))]);
+replot;
 fixAxes;
 hold off;
-""" % {'idx' : sorted(d.keys()), 'ilp' : ", ".join(ilp), 'r1' : ", ".join(r1), 'r2' : ", ".join(r2)})
+""" % {'idx' : idx, 'dij' : ", ".join(dij), 'pri' : ", ".join(pri), 'rcs' : ", ".join(rcs)})
 
-# Scenario 3: vary theta in {20, 30, 40, 50, 60}
-d = data[40000.0]
-ilp = []
-r1 = []
-r2 = []
-for theta in sorted(d.keys()):
-    ilp.append(str(d[theta][4][40][40000.0][4]['ilp'] / 1000000))
-    r1.append(str(d[theta][4][40][40000.0][4]['r1'] / 1000000))
-    r2.append(str(d[theta][4][40][40000.0][4]['r2'] / 1000000))
+# Scenario 3: vary node density
+d = data[50000.0]
+dij = []
+pri = []
+rcs = []
+idx = [9, 16, 25, 36, 49]
+
+for nodes in idx:
+    dij.append(str(d[nodes][3]['dijkstra'] / 1000000))
+    pri.append(str(d[nodes][3]['prim'] / 1000000))
+    rcs.append(str(d[nodes][3]['rcs'] / 1000000))
 
 print("""
 figure(3);
@@ -153,123 +158,23 @@ set(3, \"defaultaxesfontname\", \"Times-Roman\");
 set(3, \"defaulttextfontsize\", 19);
 set(3, \"defaultaxesfontsize\", 19);
 
-X = [ %(idx)s ];
-OPT = [ %(ilp)s ];
-R1 = [ %(r1)s ];
-R2 = [ %(r2)s ];
+X = %(idx)s;
+OPT = [ %(dijkstra)s ];
+R1 = [ %(prim)s ];
+R2 = [ %(rcs)s ];
 
 plot(X,OPT,'--og ','LineWidth',3);
 hold on;
 plot(X,R1,':*b','LineWidth',3);
 plot(X,R2,'-.sc','LineWidth',3);
 
-xlabel('Theta');
-ylabel('kb^2');
-legend('Optimal','Greedy #1','Greedy #2', \"Location\", \"NorthEast\")
+xlabel('Node Density (Nodes/50 km^2)');
+ylabel('Average Throughput (kb^2)');
+legend('CS-ShortestPath','RCS-Bottleneck','RCS-PathExtend', \"Location\", \"NorthEast\")
 set(gca, 'XTickMode', 'manual', 'XTick', X);
-hold off;
-""" % {'idx' : sorted(d.keys()), 'ilp' : ", ".join(ilp), 'r1' : ", ".join(r1), 'r2' : ", ".join(r2)})
-
-# Scenario 4: vary meanq in {20000, 30000, 40000, 50000, 60000}
-d = data[40000.0][40][4][40]
-ilp = []
-r1 = []
-r2 = []
-for mq in sorted(d.keys()):
-    ilp.append(str(d[mq][4]['ilp'] / 1000000))
-    r1.append(str(d[mq][4]['r1'] / 1000000))
-    r2.append(str(d[mq][4]['r2'] / 1000000))
-
-print("""
-figure(4);
-set(4, \"defaulttextfontname\", \"Times-Roman\");
-set(4, \"defaultaxesfontname\", \"Times-Roman\");
-set(4, \"defaulttextfontsize\", 19);
-set(4, \"defaultaxesfontsize\", 19);
-
-X = [ %(idx)s ];
-OPT = [ %(ilp)s ];
-R1 = [ %(r1)s ];
-R2 = [ %(r2)s ];
-
-plot(X,OPT,'--og ','LineWidth',3);
-hold on;
-plot(X,R1,':*b','LineWidth',3);
-plot(X,R2,'-.sc','LineWidth',3);
-
-xlabel('Mean Q (kb)');
-ylabel('kb^2');
-legend('Optimal','Greedy #1','Greedy #2', \"Location\", \"SouthEast\")
-set(gca, 'XTickMode', 'manual', 'XTick', X);
-hold off;
-""" % {'idx' : sorted(map(lambda x: x / 1000, (d.keys()))), 'ilp' : ", ".join(ilp), 'r1' : ", ".join(r1), 'r2' : ", ".join(r2)})
-
-# Scenario 5: vary region size {20, 30, 40, 50, 60} km per side
-d = data
-ilp = []
-r1 = []
-r2 = []
-for size in sorted(d.keys()):
-    ilp.append(str(d[size][40][4][40][40000][4]['ilp'] / 1000000))
-    r1.append(str(d[size][40][4][40][40000][4]['r1'] / 1000000))
-    r2.append(str(d[size][40][4][40][40000][4]['r2'] / 1000000))
-
-print("""
-figure(5);
-set(5, \"defaulttextfontname\", \"Times-Roman\");
-set(5, \"defaultaxesfontname\", \"Times-Roman\");
-set(5, \"defaulttextfontsize\", 19);
-set(5, \"defaultaxesfontsize\", 19);
-X = [ %(idx)s ];
-OPT = [ %(ilp)s ];
-R1 = [ %(r1)s ];
-R2 = [ %(r2)s ];
-
-plot(X,OPT,'--og ','LineWidth',3);
-hold on;
-plot(X,R1,':*b','LineWidth',3);
-plot(X,R2,'-.sc','LineWidth',3);
-
-xlabel('Side Length (km)');
-ylabel('kb^2');
-legend('Optimal','Greedy #1','Greedy #2', \"Location\", \"NorthEast\")
-set(gca, 'XTickMode', 'manual', 'XTick', X, 'YTickMode', 'manual');
-hold off;
-
+axis([X(1), X(length(X))]);
+replot;
 fixAxes;
-""" % {'idx' : sorted(map(lambda x: x / 1000, d.keys())), 'ilp' : ", ".join(ilp), 'r1' : ", ".join(r1), 'r2' : ", ".join(r2)})
-
-# Scenario 6: vary the number of channels {2, 3, 4, 5, 6} 
-d = data[40000.0][40][4][40][40000.0]
-ilp = []
-r1 = []
-r2 = []
-for size in sorted(d.keys()):
-    ilp.append(str(d[size]['ilp'] / 1000000))
-    r1.append(str(d[size]['r1'] / 1000000))
-    r2.append(str(d[size]['r2'] / 1000000))
-
-print("""
-figure(6);
-set(6, \"defaulttextfontname\", \"Times-Roman\");
-set(6, \"defaultaxesfontname\", \"Times-Roman\");
-set(6, \"defaulttextfontsize\", 19);
-set(6, \"defaultaxesfontsize\", 19);
-X = [ %(idx)s ];
-OPT = [ %(ilp)s ];
-R1 = [ %(r1)s ];
-R2 = [ %(r2)s ];
-
-plot(X,OPT,'--og ','LineWidth',3);
-hold on;
-plot(X,R1,':*b','LineWidth',3);
-plot(X,R2,'-.sc','LineWidth',3);
-
-xlabel('Number of Channels');
-ylabel('kb^2');
-legend('Optimal','Greedy #1','Greedy #2', \"Location\", \"SouthEast\")
-set(gca, 'XTickMode', 'manual', 'XTick', X, 'YTickMode', 'manual');
 hold off;
+""" % {'idx' : idx, 'dijkstra' : ", ".join(dij), 'prim' : ", ".join(pri), 'rcs' : ", ".join(rcs)})
 
-fixAxes;
-""" % {'idx' : sorted(d.keys()), 'ilp' : ", ".join(ilp), 'r1' : ", ".join(r1), 'r2' : ", ".join(r2)})
