@@ -5,10 +5,11 @@ import org.apache.commons.lang.StringUtils;
 import java.util.Vector;
 
 public class Edge {
-    public int     id;                          
-    public double  length;
-    public double  capacity;
-    public int     type;
+
+    public int id;
+    public double length;
+    public double capacity;
+    public int type;
     public Double[] channels;
     public Boolean isMarked = false;
     public double weight = 0.0d;
@@ -17,7 +18,7 @@ public class Edge {
         this.id = id;
         this.type = 0;
     }
-        
+
     public Edge() {
         this.id = -1;
         this.type = 0;
@@ -25,29 +26,31 @@ public class Edge {
 
     public double bottleNeckCapacity() {
         double sum = 0.0d;
-        for(int i = 0; i < channels.length; i++) {
+        for (int i = 0; i < channels.length; i++) {
             if (channels[i] > 0.0d) {
                 sum += channels[i];
             }
         }
-        return(sum);
+        return (sum);
     }
 
     public double bottleNeckWeight() {
-        double max = channels.length * 45 * Math.pow(10,6);
-        return (max - (this.weight * bottleNeckCapacity()));
+        double max = channels.length * 45 * Math.pow(10, 6);
+        //return (max - (this.weight * bottleNeckCapacity()));
+        return (max - (1.0 * bottleNeckCapacity()));
     }
+
     public String toString() {
         DecimalFormat dec = new DecimalFormat("##.#");
         String delim = "";
         Vector active = new Vector();
-        for(int i = 0; i < channels.length; i++) {
+        for (int i = 0; i < channels.length; i++) {
             if (channels[i] > 0.0) {
                 active.add(i);
             }
         }
         String c = "{ " + StringUtils.join(active, ", ") + " }";
-        return("[" + Integer.toString(id) + "] " + dec.format(length) + " km " + c);
+        return ("[" + Integer.toString(id) + "] " + dec.format(length) + " km " + c);
     }
 
     double lookupThroughput(int frequency) {
@@ -66,7 +69,7 @@ public class Edge {
                 return 40 * Math.pow(10, 6);
             } else {
                 return 45 * Math.pow(10, 6);
-            }        
+            }
         } else if (frequency == 2400) {
             if (distance > 20.0) {
                 return 0.0;
@@ -80,7 +83,7 @@ public class Edge {
                 return 40 * Math.pow(10, 6);
             } else {
                 return 45 * Math.pow(10, 6);
-            }        
+            }
         } else if (frequency == 5800) {
             if (distance > 8.2) {
                 return 0.0;
@@ -94,7 +97,7 @@ public class Edge {
                 return 40 * Math.pow(10, 6);
             } else {
                 return 45 * Math.pow(10, 6);
-            }        
+            }
         }
         return 0.0;
     }
