@@ -8,23 +8,24 @@ function fixAxes
 %---------------------------------------
 s = get(0,'showhiddenhandles');
 set(0,'showhiddenhandles','on');
-newpos = [0.17 0.16 0.775 0.815];    %// default is [0.13 0.11 0.775 0.815]
+newpos = [0.17 0.16 0.775 0.815];
+%//newpos = [0.13 0.14 0.775 0.7];    %// default is [0.13 0.11 0.775 0.815]
 figs = get(0,'children');
 if (~isempty(figs))
   for k=1:length(figs)
-	  cax = get(figs(k),'currentaxes');
-pos = get(cax,'position');       
-if ~(pos(1) == newpos(1) && ... 
-     pos(2) == newpos(2) && ...
-     pos(3) == newpos(3) && ...
-     pos(4) == newpos(4))
-set(cax,'position',newpos);    
-set(0,'currentfigure',figs(k));
-drawnow();
-        endif
-    endfor
+    cax = get(figs(k),'currentaxes');
+    pos = get(cax,'position');       
+    if ~(pos(1) == newpos(1) && ... 
+      pos(2) == newpos(2) && ...
+      pos(3) == newpos(3) && ...
+      pos(4) == newpos(4))
+	set(cax,'position',newpos);    
+        set(0,'currentfigure',figs(k));
+        drawnow();
+    endif
+  endfor
 endif
-	set(0,'showhiddenhandles',s);
+set(0,'showhiddenhandles',s);
 %---------------------------------------
 endfunction
 %---------------------------------------
